@@ -10,7 +10,8 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 120, 0, 40)
+toggleButton.Name = "Toggle"
+toggleButton.Size = UDim2.new(0, 120, 0, 50) -- Increased height for better touch target
 toggleButton.Position = UDim2.new(0, 10, 0, 10)
 toggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -18,12 +19,21 @@ toggleButton.Font = Enum.Font.SourceSansBold
 toggleButton.TextSize = 20
 toggleButton.Text = "Hitbox: ON"
 toggleButton.Parent = screenGui
+toggleButton.Draggable = true -- Enable dragging for mobile and PC
+toggleButton.Active = true -- Ensure the button can be interacted with
 
+-- Add rounded corners for visual polish
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8) -- Adjust radius as needed
+corner.Parent = toggleButton
+
+-- Toggle functionality
 toggleButton.MouseButton1Click:Connect(function()
     IsEnabled = not IsEnabled
     toggleButton.Text = IsEnabled and "Hitbox: ON" or "Hitbox: OFF"
 end)
 
+-- Hitbox logic
 game:GetService("RunService").RenderStepped:Connect(function()
     local localPlayer = game:GetService("Players").LocalPlayer
     if not localPlayer then return end

@@ -1,23 +1,54 @@
 local HeadSize = 10
-local IsDisabled = true
-local IsTeamCheckEnabled = true 
+local IsEnabled = true
+local IsTeamCheckEnabled = true
 
-game:GetService('RunService').RenderStepped:Connect(function()
-    if IsDisabled then
-        local localPlayer = game:GetService('Players').LocalPlayer
-        if not localPlayer then return end
-        
-        local localPlayerTeam = localPlayer.Team
-        
-        for _, player in ipairs(game:GetService('Players'):GetPlayers()) do
-            if player ~= localPlayer and (not IsTeamCheckEnabled or player.Team ~= localPlayerTeam) then
-                local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    humanoidRootPart.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
-                    humanoidRootPart.Transparency = 0.7
-                    humanoidRootPart.BrickColor = BrickColor.new("Really blue")
-                    humanoidRootPart.Material = Enum.Material.Neon
-                    humanoidRootPart.CanCollide = false
+local defaultSize = Vector3.new(2, 2, 1)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HitboxToggleUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 120, 0, 40)
+toggleButton.Position = UDim2.new(0, 10, 0, 10)
+toggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 20
+toggleButton.Text = "Hitbox: ON"
+toggleButton.Parent = screenGui
+
+toggleButton.MouseButton1Click:Connect(function()
+    IsEnabled = not IsEnabled
+    toggleButton.Text = IsEnabled and "Hitbox: ON" or "Hitbox: OFF"
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    local localPlayer = game:GetService("Players").LocalPlayer
+    if not localPlayer then return end
+
+    local localTeam = localPlayer.Team
+
+    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if player ~= localPlayer and (not IsTeamCheckEnabled or player.Team ~= localTeam) then
+            local char = player.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    if IsEnabled then
+                        hrp.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
+                        hrp.Transparency = 0.7
+                        hrp.BrickColor = BrickColor.new("Really blue")
+                        hrp.Material = Enum.Material.Neon
+                        hrp.CanCollide = false
+                    else
+                        hrp.Size = defaultSize
+                        hrp.Transparency = 0
+                        hrp.BrickColor = BrickColor.new("Medium stone grey")
+                        hrp.Material = Enum.Material.Plastic
+                        hrp.CanCollide = true
+                    end
                 end
             end
         end

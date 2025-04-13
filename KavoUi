@@ -13,7 +13,7 @@ function Kavo:DraggingEnabled(frame, parent)
     local dragging = false
     local dragInput, mousePos, framePos
 
-    frame.InputBegan:Connect(function(input)
+    frame.InputBegan:Connect(function(input
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             mousePos = input.Position

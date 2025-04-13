@@ -7,7 +7,7 @@ local run = game:GetService("RunService")
 local Utility = {}
 local Objects = {}
 
--- Dragging Function (Fixed for Mobile)
+-- Dragging Function (Already Fixed for Mobile)
 function Kavo:DraggingEnabled(frame, parent)
     parent = parent or frame
     local dragging = false
@@ -68,14 +68,16 @@ local themeStyles = {
         Background = Color3.fromRGB(0, 0, 0),
         Header = Color3.fromRGB(0, 0, 0),
         TextColor = Color3.fromRGB(255, 255, 255),
-        ElementColor = Color3.fromRGB(20, 20, 20)
+        ElementColor = Color3.fromRGB(20, 20, 20),
+        SelectedTabColor = Color3.fromRGB(50, 50, 50) -- New color for selected tab
     },
     LightTheme = {
         SchemeColor = Color3.fromRGB(150, 150, 150),
         Background = Color3.fromRGB(255, 255, 255),
         Header = Color3.fromRGB(200, 200, 200),
         TextColor = Color3.fromRGB(0, 0, 0),
-        ElementColor = Color3.fromRGB(224, 224, 224)
+        ElementColor = Color3.fromRGB(224, 224, 224),
+        SelectedTabColor = Color3.fromRGB(180, 180, 180)
     }
 }
 
@@ -192,6 +194,7 @@ function Kavo.CreateLib(kavName, themeList)
     tabListing.Name = "tabListing"
     tabListing.Parent = tabFrames
     tabListing.SortOrder = Enum.SortOrder.LayoutOrder
+    tabListing.Padding = UDim.new(0, 5) -- Added padding between tabs
 
     pages.Name = "pages"
     pages.Parent = Main
@@ -219,6 +222,7 @@ function Kavo.CreateLib(kavName, themeList)
 
     local Tabs = {}
     local selectedTab = nil
+    local selectedTabButton = nil
 
     function Kavo:ToggleUI()
         ScreenGui.Enabled = not ScreenGui.Enabled
@@ -252,19 +256,28 @@ function Kavo.CreateLib(kavName, themeList)
         tabList.Name = "tabList"
         tabList.Parent = tabFrame
         tabList.SortOrder = Enum.SortOrder.LayoutOrder
-        tabList.Padding = UDim.new(0, 3)
+        tabList.Padding = UDim.new(0, 5) -- Increased padding between sections
 
         tabButton.MouseButton1Click:Connect(function()
             for _, v in pairs(Pages:GetChildren()) do
                 v.Visible = false
             end
+            for _, v in pairs(tabFrames:GetChildren()) do
+                if v:IsA("TextButton") then
+                    v.BackgroundColor3 = themeList.ElementColor
+                end
+            end
             tabFrame.Visible = true
             selectedTab = tabFrame
+            tabButton.BackgroundColor3 = themeList.SelectedTabColor
+            selectedTabButton = tabButton
         end)
 
         if not selectedTab then
             tabFrame.Visible = true
             selectedTab = tabFrame
+            tabButton.BackgroundColor3 = themeList.SelectedTabColor
+            selectedTabButton = tabButton
         end
 
         local Sections = {}
@@ -289,14 +302,14 @@ function Kavo.CreateLib(kavName, themeList)
             sectionList.Name = "sectionList"
             sectionList.Parent = sectionInner
             sectionList.SortOrder = Enum.SortOrder.LayoutOrder
-            sectionList.Padding = UDim.new(0, 3)
+            sectionList.Padding = UDim.new(0, 5) -- Increased padding between elements
 
             sectionTitle.Name = "sectionTitle"
             sectionTitle.Parent = sectionFrame
             sectionTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             sectionTitle.BackgroundTransparency = 1.000
             sectionTitle.Position = UDim2.new(0.0170454532, 0, 0, 0)
-            sectionTitle.Size = UDim2.new(0, 340, 0, 33)
+            sectionTitle.Size = UDim2.new(0, 340, 0, 25) -- Adjusted size for better spacing
             sectionTitle.Font = Enum.Font.Gotham
             sectionTitle.Text = sectionName
             sectionTitle.TextColor3 = themeList.TextColor
@@ -309,8 +322,8 @@ function Kavo.CreateLib(kavName, themeList)
 
             local function updateSize()
                 local contentSize = sectionList.AbsoluteContentSize
-                sectionFrame.Size = UDim2.new(0, 352, 0, contentSize.Y + 10)
-                sectionInner.Size = UDim2.new(0, 352, 0, contentSize.Y + 10)
+                sectionFrame.Size = UDim2.new(0, 352, 0, contentSize.Y + 30) -- Added extra padding
+                sectionInner.Size = UDim2.new(0, 352, 0, contentSize.Y + 30)
                 tabFrame.CanvasSize = UDim2.new(0, 0, 0, tabList.AbsoluteContentSize.Y + 10)
             end
 
@@ -330,7 +343,7 @@ function Kavo.CreateLib(kavName, themeList)
                 buttonFrame.Name = buttonText
                 buttonFrame.Parent = sectionInner
                 buttonFrame.BackgroundColor3 = themeList.ElementColor
-                buttonFrame.Size = UDim2.new(0, 352, 0, 33)
+                buttonFrame.Size = UDim2.new(0, 352, 0, 40) -- Increased height to accommodate info
 
                 button.Name = "button"
                 button.Parent = buttonFrame
@@ -350,13 +363,13 @@ function Kavo.CreateLib(kavName, themeList)
                 buttonInfoLabel.Parent = buttonFrame
                 buttonInfoLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 buttonInfoLabel.BackgroundTransparency = 1.000
-                buttonInfoLabel.Position = UDim2.new(0, 4, 0, 18)
-                buttonInfoLabel.Size = UDim2.new(0, 344, 0, 15)
+                buttonInfoLabel.Position = UDim2.new(0, 4, 0, 28) -- Adjusted position to avoid overlap
+                buttonInfoLabel.Size = UDim2.new(0, 344, 0, 12)
                 buttonInfoLabel.Font = Enum.Font.Gotham
                 buttonInfoLabel.Text = buttonInfo
                 buttonInfoLabel.TextColor3 = themeList.TextColor
-                buttonInfoLabel.TextSize = 12.000
-                buttonInfoLabel.TextTransparency = 0.5
+                buttonInfoLabel.TextSize = 10.000
+                buttonInfoLabel.TextTransparency = 0.3 -- Reduced transparency for better visibility
                 buttonInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
 
                 button.MouseButton1Click:Connect(function()
@@ -382,7 +395,7 @@ function Kavo.CreateLib(kavName, themeList)
                 toggleFrame.Name = toggleText
                 toggleFrame.Parent = sectionInner
                 toggleFrame.BackgroundColor3 = themeList.ElementColor
-                toggleFrame.Size = UDim2.new(0, 352, 0, 33)
+                toggleFrame.Size = UDim2.new(0, 352, 0, 40)
 
                 toggleButton.Name = "toggle"
                 toggleButton.Parent = toggleFrame
@@ -402,13 +415,13 @@ function Kavo.CreateLib(kavName, themeList)
                 toggleInfoLabel.Parent = toggleFrame
                 toggleInfoLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 toggleInfoLabel.BackgroundTransparency = 1.000
-                toggleInfoLabel.Position = UDim2.new(0, 4, 0, 18)
-                toggleInfoLabel.Size = UDim2.new(0, 344, 0, 15)
+                toggleInfoLabel.Position = UDim2.new(0, 4, 0, 28)
+                toggleInfoLabel.Size = UDim2.new(0, 344, 0, 12)
                 toggleInfoLabel.Font = Enum.Font.Gotham
                 toggleInfoLabel.Text = toggleInfo
                 toggleInfoLabel.TextColor3 = themeList.TextColor
-                toggleInfoLabel.TextSize = 12.000
-                toggleInfoLabel.TextTransparency = 0.5
+                toggleInfoLabel.TextSize = 10.000
+                toggleInfoLabel.TextTransparency = 0.3
                 toggleInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
 
                 toggleIndicator.Name = "indicator"

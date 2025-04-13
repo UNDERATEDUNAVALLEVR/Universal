@@ -1,6 +1,8 @@
+-- made by grok ai hahahaha
+
 local HeadSize = 10 -- Default size
 local IsEnabled = true
-local IsTeamCheckEnabled = true
+local IsTeamCheckEnabled = false
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -15,7 +17,7 @@ screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Frame to hold UI elements
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 150, 0, 100)
+frame.Size = UDim2.new(0, 120, 0, 120)
 frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BackgroundTransparency = 0.2
@@ -30,12 +32,12 @@ frameCorner.Parent = frame
 -- Toggle button
 local toggleButton = Instance.new("TextButton")
 toggleButton.Name = "Toggle"
-toggleButton.Size = UDim2.new(0, 120, 0, 40)
-toggleButton.Position = UDim2.new(0, 15, 0, 10)
+toggleButton.Size = UDim2.new(0, 90, 0, 30)
+toggleButton.Position = UDim2.new(0, 15, 0, 5)
 toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSansBold
-toggleButton.TextSize = 20
+toggleButton.TextSize = 16
 toggleButton.Text = "Hitbox: ON"
 toggleButton.Parent = frame
 
@@ -45,12 +47,12 @@ toggleCorner.Parent = toggleButton
 
 -- TextBox for custom hitbox size
 local sizeInput = Instance.new("TextBox")
-sizeInput.Size = UDim2.new(0, 120, 0, 30)
-sizeInput.Position = UDim2.new(0, 15, 0, 55)
+sizeInput.Size = UDim2.new(0, 90, 0, 25)
+sizeInput.Position = UDim2.new(0, 15, 0, 40)
 sizeInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 sizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 sizeInput.Font = Enum.Font.SourceSans
-sizeInput.TextSize = 18
+sizeInput.TextSize = 14
 sizeInput.Text = tostring(HeadSize)
 sizeInput.PlaceholderText = "Size (e.g., 10)"
 sizeInput.Parent = frame
@@ -59,29 +61,21 @@ local inputCorner = Instance.new("UICorner")
 inputCorner.CornerRadius = UDim.new(0, 8)
 inputCorner.Parent = sizeInput
 
--- Toggle functionality
-toggleButton.MouseButton1Click:Connect(function()
-    IsEnabled = not IsEnabled
-    toggleButton.Text = IsEnabled and "Hitbox: ON" or "Hitbox: OFF"
-    print("Toggled hitbox: " .. (IsEnabled and "ON" or "OFF"))
-end)
+-- TeamCheck toggle button
+local teamCheckButton = Instance.new("TextButton")
+teamCheckButton.Name = "TeamCheckToggle"
+teamCheckButton.Size = UDim2.new(0, 90, 0, 30)
+teamCheckButton.Position = UDim2.new(0, 15, 0, 70)
+teamCheckButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+teamCheckButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+teamCheckButton.Font = Enum.Font.SourceSansBold
+teamCheckButton.TextSize = 14
+teamCheckButton.Text = "TeamCheck: OFF"
+teamCheckButton.Parent = frame
 
--- Auto-update hitbox size as the user types
-sizeInput:GetPropertyChangedSignal("Text"):Connect(function()
-    local input = tonumber(sizeInput.Text)
-    if input and input >= 1 and input <= 100 then
-        HeadSize = input
-        print("Set HeadSize to: " .. HeadSize)
-    else
-        -- Don't revert the TextBox text here; let the user finish typing
-        print("Invalid input (temporary): " .. tostring(sizeInput.Text))
-    end
-end)
-
--- When the user finishes typing (e.g., loses focus), ensure the TextBox shows the correct value
-sizeInput.FocusLost:Connect(function()
-    sizeInput.Text = tostring(HeadSize) -- Revert to the last valid HeadSize if the input is invalid
-end)
+local teamCheckCorner = Instance.new("UICorner")
+teamCheckCorner.CornerRadius = UDim.new(0, 8)
+teamCheckCorner.Parent = teamCheckButton
 
 -- Function to create or update a hitbox overlay
 local function createHitboxOverlay(player, hrp)
@@ -102,7 +96,7 @@ local function createHitboxOverlay(player, hrp)
     overlay.BrickColor = BrickColor.new("Really blue")
     overlay.Material = Enum.Material.Neon
     overlay.CanCollide = false
-    overlay.Anchored = true -- Anchored so it doesn’t fall
+    overlay.Anchored = true
     overlay.Parent = workspace
 
     -- Weld the overlay to the HumanoidRootPart
@@ -124,12 +118,81 @@ local function removeHitboxOverlay(player)
     end
 end
 
+-- Function to update all overlays based on current settings
+local function updateAllOverlays()
+    local localPlayer = Players.LocalPlayer
+    if not localPlayer then
+        print("LocalPlayer not found")
+        return
+    end
+
+    local localTeam = localPlayer.Team
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer and (not IsTeamCheckEnabled or player.Team ~= localTeam) then
+            local char = player.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    if IsEnabled then
+                        if not hitboxOverlays[player] or hitboxOverlays[player].Size ~= Vector3.new(HeadSize, HeadSize, HeadSize) then
+                            createHitboxOverlay(player, hrp)
+                        end
+                    else
+                        removeHitboxOverlay(player)
+                    end
+                end
+            end
+        else
+            -- Remove overlay if player doesn't meet team check criteria
+            removeHitboxOverlay(player)
+        end
+    end
+end
+
+-- Toggle hitbox functionality
+toggleButton.MouseButton1Click:Connect(function()
+    IsEnabled = not IsEnabled
+    toggleButton.Text = IsEnabled and "Hitbox: ON" or "Hitbox: OFF"
+    print("Toggled hitbox: " .. (IsEnabled and "ON" or "OFF"))
+    updateAllOverlays() -- Update overlays immediately
+end)
+
+-- Toggle team check functionality
+teamCheckButton.MouseButton1Click:Connect(function()
+    IsTeamCheckEnabled = not IsTeamCheckEnabled
+    teamCheckButton.Text = IsTeamCheckEnabled and "TeamCheck: ON" or "TeamCheck: OFF"
+    print("Toggled TeamCheck: " .. (IsTeamCheckEnabled and "ON" or "OFF"))
+    updateAllOverlays() -- Update overlays immediately
+end)
+
+-- Auto-update hitbox size as the user types
+sizeInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local input = tonumber(sizeInput.Text)
+    if input and input >= 1 and input <= 100 then
+        HeadSize = input
+        print("Set HeadSize to: " .. HeadSize)
+        updateAllOverlays() -- Update overlays immediately
+    else
+        print("Invalid input (temporary): " .. tostring(sizeInput.Text))
+    end
+end)
+
+-- When the user finishes typing (e.g., loses focus), ensure the TextBox shows the correct value
+sizeInput.FocusLost:Connect(function()
+    sizeInput.Text = tostring(HeadSize)
+end)
+
 -- Handle character added/respawn
 local function onCharacterAdded(player, character)
     local hrp = character:WaitForChild("HumanoidRootPart", 5)
     if hrp then
         if IsEnabled then
-            createHitboxOverlay(player, hrp)
+            local localPlayer = Players.LocalPlayer
+            local localTeam = localPlayer and localPlayer.Team
+            if not IsTeamCheckEnabled or (localTeam and player.Team ~= localTeam) then
+                createHitboxOverlay(player, hrp)
+            end
         end
     else
         print("No HumanoidRootPart found for " .. player.Name)
@@ -187,6 +250,9 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
             end
+        else
+            -- Remove overlay if player doesn't meet team check criteria
+            removeHitboxOverlay(player)
         end
     end
 end)

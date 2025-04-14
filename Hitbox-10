@@ -1,7 +1,8 @@
 local HeadSize = 10
 local Transparency = 0.7 -- Default transparency
 local IsEnabled = true
-local IsTeamCheckEnabled = true
+local IsTeamCheckEnabled = false
+local IsUIVisible = true -- Track UI visibility state
 
 local defaultSize = Vector3.new(2, 2, 1)
 local defaultTransparency = 0
@@ -19,7 +20,7 @@ screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Frame to hold UI elements
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 120, 0, 155) -- Adjusted height for new elements
+frame.Size = UDim2.new(0, 120, 0, 155)
 frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BackgroundTransparency = 0.2
@@ -31,7 +32,7 @@ local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0, 8)
 frameCorner.Parent = frame
 
--- Toggle button
+-- Toggle button for hitbox
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 90, 0, 30)
 toggleButton.Position = UDim2.new(0, 15, 0, 5)
@@ -71,7 +72,7 @@ teamCheckButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 teamCheckButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 teamCheckButton.Font = Enum.Font.SourceSansBold
 teamCheckButton.TextSize = 14
-teamCheckButton.Text = "TeamCheck: ON" -- Default is true
+teamCheckButton.Text = "TeamCheck: ON"
 teamCheckButton.Parent = frame
 
 local teamCheckCorner = Instance.new("UICorner")
@@ -93,6 +94,28 @@ transparencyInput.Parent = frame
 local transparencyCorner = Instance.new("UICorner")
 transparencyCorner.CornerRadius = UDim.new(0, 8)
 transparencyCorner.Parent = transparencyInput
+
+-- Hide/Unhide toggle button
+local hideButton = Instance.new("TextButton")
+hideButton.Size = UDim2.new(0, 40, 0, 40)
+hideButton.Position = UDim2.new(1, -50, 0, 10) -- Top-right corner
+hideButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+hideButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+hideButton.Font = Enum.Font.SourceSansBold
+hideButton.TextSize = 14
+hideButton.Text = "Hide"
+hideButton.Parent = screenGui
+
+local hideButtonCorner = Instance.new("UICorner")
+hideButtonCorner.CornerRadius = UDim.new(0, 20) -- Circular button
+hideButtonCorner.Parent = hideButton
+
+-- Toggle UI visibility
+hideButton.MouseButton1Click:Connect(function()
+    IsUIVisible = not IsUIVisible
+    frame.Visible = IsUIVisible
+    hideButton.Text = IsUIVisible and "Hide" or "Show"
+end)
 
 -- Toggle hitbox functionality
 toggleButton.MouseButton1Click:Connect(function()

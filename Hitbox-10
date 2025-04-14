@@ -1,53 +1,162 @@
 local HeadSize = 10
+local Transparency = 0.7 -- Default transparency
 local IsEnabled = true
 local IsTeamCheckEnabled = true
 
 local defaultSize = Vector3.new(2, 2, 1)
+local defaultTransparency = 0
+local defaultBrickColor = BrickColor.new("Medium stone grey")
+local defaultMaterial = Enum.Material.Plastic
+local defaultCanCollide = true
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "HitboxToggleUI"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
+-- Frame to hold UI elements
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 120, 0, 155) -- Adjusted height for new elements
+frame.Position = UDim2.new(0, 10, 0, 10)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BackgroundTransparency = 0.2
+frame.Parent = screenGui
+frame.Draggable = true
+frame.Active = true
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 8)
+frameCorner.Parent = frame
+
+-- Toggle button
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 120, 0, 40)
-toggleButton.Position = UDim2.new(0, 10, 0, 10)
-toggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleButton.Size = UDim2.new(0, 90, 0, 30)
+toggleButton.Position = UDim2.new(0, 15, 0, 5)
+toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSansBold
-toggleButton.TextSize = 20
+toggleButton.TextSize = 16
 toggleButton.Text = "Hitbox: ON"
-toggleButton.Parent = screenGui
+toggleButton.Parent = frame
 
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 8)
+toggleCorner.Parent = toggleButton
+
+-- TextBox for custom hitbox size
+local sizeInput = Instance.new("TextBox")
+sizeInput.Size = UDim2.new(0, 90, 0, 25)
+sizeInput.Position = UDim2.new(0, 15, 0, 40)
+sizeInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+sizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+sizeInput.Font = Enum.Font.SourceSans
+sizeInput.TextSize = 14
+sizeInput.Text = tostring(HeadSize)
+sizeInput.PlaceholderText = "Size (e.g., 10)"
+sizeInput.Parent = frame
+
+local inputCorner = Instance.new("UICorner")
+inputCorner.CornerRadius = UDim.new(0, 8)
+inputCorner.Parent = sizeInput
+
+-- TeamCheck toggle button
+local teamCheckButton = Instance.new("TextButton")
+teamCheckButton.Name = "TeamCheckToggle"
+teamCheckButton.Size = UDim2.new(0, 90, 0, 30)
+teamCheckButton.Position = UDim2.new(0, 15, 0, 80)
+teamCheckButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+teamCheckButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+teamCheckButton.Font = Enum.Font.SourceSansBold
+teamCheckButton.TextSize = 14
+teamCheckButton.Text = "TeamCheck: ON" -- Default is true
+teamCheckButton.Parent = frame
+
+local teamCheckCorner = Instance.new("UICorner")
+teamCheckCorner.CornerRadius = UDim.new(0, 8)
+teamCheckCorner.Parent = teamCheckButton
+
+-- TextBox for custom transparency
+local transparencyInput = Instance.new("TextBox")
+transparencyInput.Size = UDim2.new(0, 90, 0, 25)
+transparencyInput.Position = UDim2.new(0, 15, 0, 115)
+transparencyInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+transparencyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+transparencyInput.Font = Enum.Font.SourceSans
+transparencyInput.TextSize = 14
+transparencyInput.Text = tostring(Transparency)
+transparencyInput.PlaceholderText = "Trans (0-1, e.g., 0.7)"
+transparencyInput.Parent = frame
+
+local transparencyCorner = Instance.new("UICorner")
+transparencyCorner.CornerRadius = UDim.new(0, 8)
+transparencyCorner.Parent = transparencyInput
+
+-- Toggle hitbox functionality
 toggleButton.MouseButton1Click:Connect(function()
     IsEnabled = not IsEnabled
     toggleButton.Text = IsEnabled and "Hitbox: ON" or "Hitbox: OFF"
 end)
 
-game:GetService("RunService").RenderStepped:Connect(function()
-    local localPlayer = game:GetService("Players").LocalPlayer
+-- Toggle team check functionality
+teamCheckButton.MouseButton1Click:Connect(function()
+    IsTeamCheckEnabled = not IsTeamCheckEnabled
+    teamCheckButton.Text = IsTeamCheckEnabled and "TeamCheck: ON" or "TeamCheck: OFF"
+end)
+
+-- Auto-update hitbox size as the user types
+sizeInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local input = tonumber(sizeInput.Text)
+    if input and input >= 1 and input <= 100 then
+        HeadSize = input
+    end
+end)
+
+-- When the user finishes typing (e.g., loses focus), ensure the TextBox shows the correct value
+sizeInput.FocusLost:Connect(function()
+    sizeInput.Text = tostring(HeadSize)
+end)
+
+-- Auto-update transparency as the user types
+transparencyInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local input = tonumber(transparencyInput.Text)
+    if input and input >= 0 and input <= 1 then
+        Transparency = input
+    end
+end)
+
+-- When the user finishes typing (e.g., loses focus), ensure the TextBox shows the correct value
+transparencyInput.FocusLost:Connect(function()
+    transparencyInput.Text = tostring(Transparency)
+end)
+
+-- Main loop to apply hitbox changes
+RunService.RenderStepped:Connect(function()
+    local localPlayer = Players.LocalPlayer
     if not localPlayer then return end
 
     local localTeam = localPlayer.Team
 
-    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-        if player ~= localPlayer and (not IsTeamCheckEnabled or player.Team ~= localTeam) then
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer and (not IsTeamCheckEnabled or (localTeam and player.Team ~= localTeam)) then
             local char = player.Character
             if char then
                 local hrp = char:FindFirstChild("HumanoidRootPart")
                 if hrp then
                     if IsEnabled then
                         hrp.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
-                        hrp.Transparency = 0.7
+                        hrp.Transparency = Transparency
                         hrp.BrickColor = BrickColor.new("Really blue")
                         hrp.Material = Enum.Material.Neon
                         hrp.CanCollide = false
                     else
                         hrp.Size = defaultSize
-                        hrp.Transparency = 0
-                        hrp.BrickColor = BrickColor.new("Medium stone grey")
-                        hrp.Material = Enum.Material.Plastic
-                        hrp.CanCollide = true
+                        hrp.Transparency = defaultTransparency
+                        hrp.BrickColor = defaultBrickColor
+                        hrp.Material = defaultMaterial
+                        hrp.CanCollide = defaultCanCollide
                     end
                 end
             end

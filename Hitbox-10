@@ -1,6 +1,7 @@
 -- made by grok ai hahahaha
 
 local HeadSize = 10 -- Default size
+local Transparency = 0.8 -- Default transparency
 local IsEnabled = true
 local IsTeamCheckEnabled = false
 
@@ -17,7 +18,7 @@ screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Frame to hold UI elements
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 120, 0, 120)
+frame.Size = UDim2.new(0, 120, 0, 155)
 frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BackgroundTransparency = 0.2
@@ -65,7 +66,7 @@ inputCorner.Parent = sizeInput
 local teamCheckButton = Instance.new("TextButton")
 teamCheckButton.Name = "TeamCheckToggle"
 teamCheckButton.Size = UDim2.new(0, 90, 0, 30)
-teamCheckButton.Position = UDim2.new(0, 15, 0, 70)
+teamCheckButton.Position = UDim2.new(0, 15, 0, 80)
 teamCheckButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 teamCheckButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 teamCheckButton.Font = Enum.Font.SourceSansBold
@@ -76,6 +77,22 @@ teamCheckButton.Parent = frame
 local teamCheckCorner = Instance.new("UICorner")
 teamCheckCorner.CornerRadius = UDim.new(0, 8)
 teamCheckCorner.Parent = teamCheckButton
+
+-- TextBox for custom transparency
+local transparencyInput = Instance.new("TextBox")
+transparencyInput.Size = UDim2.new(0, 90, 0, 25)
+transparencyInput.Position = UDim2.new(0, 15, 0, 115)
+transparencyInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+transparencyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+transparencyInput.Font = Enum.Font.SourceSans
+transparencyInput.TextSize = 14
+transparencyInput.Text = tostring(Transparency)
+transparencyInput.PlaceholderText = "Trans (0-1, e.g., 0.7)"
+transparencyInput.Parent = frame
+
+local transparencyCorner = Instance.new("UICorner")
+transparencyCorner.CornerRadius = UDim.new(0, 8)
+transparencyCorner.Parent = transparencyInput
 
 -- Function to create or update a hitbox overlay
 local function createHitboxOverlay(player, hrp)
@@ -92,7 +109,7 @@ local function createHitboxOverlay(player, hrp)
     overlay.Name = "HitboxOverlay"
     overlay.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
     overlay.Position = hrp.Position
-    overlay.Transparency = 0.7
+    overlay.Transparency = Transparency
     overlay.BrickColor = BrickColor.new("Really blue")
     overlay.Material = Enum.Material.Neon
     overlay.CanCollide = false
@@ -106,7 +123,6 @@ local function createHitboxOverlay(player, hrp)
     weld.Parent = overlay
 
     hitboxOverlays[player] = overlay
-    print("Created hitbox overlay for " .. player.Name .. ": Size = " .. HeadSize)
 end
 
 -- Function to remove hitbox overlay
@@ -114,17 +130,13 @@ local function removeHitboxOverlay(player)
     if hitboxOverlays[player] then
         hitboxOverlays[player]:Destroy()
         hitboxOverlays[player] = nil
-        print("Removed hitbox overlay for " .. player.Name)
     end
 end
 
 -- Function to update all overlays based on current settings
 local function updateAllOverlays()
     local localPlayer = Players.LocalPlayer
-    if not localPlayer then
-        print("LocalPlayer not found")
-        return
-    end
+    if not localPlayer then return end
 
     local localTeam = localPlayer.Team
 
@@ -135,7 +147,9 @@ local function updateAllOverlays()
                 local hrp = char:FindFirstChild("HumanoidRootPart")
                 if hrp then
                     if IsEnabled then
-                        if not hitboxOverlays[player] or hitboxOverlays[player].Size ~= Vector3.new(HeadSize, HeadSize, HeadSize) then
+                        if not hitboxOverlays[player] or 
+                           hitboxOverlays[player].Size ~= Vector3.new(HeadSize, HeadSize, HeadSize) or 
+                           hitboxOverlays[player].Transparency ~= Transparency then
                             createHitboxOverlay(player, hrp)
                         end
                     else
@@ -154,7 +168,6 @@ end
 toggleButton.MouseButton1Click:Connect(function()
     IsEnabled = not IsEnabled
     toggleButton.Text = IsEnabled and "Hitbox: ON" or "Hitbox: OFF"
-    print("Toggled hitbox: " .. (IsEnabled and "ON" or "OFF"))
     updateAllOverlays() -- Update overlays immediately
 end)
 
@@ -162,7 +175,6 @@ end)
 teamCheckButton.MouseButton1Click:Connect(function()
     IsTeamCheckEnabled = not IsTeamCheckEnabled
     teamCheckButton.Text = IsTeamCheckEnabled and "TeamCheck: ON" or "TeamCheck: OFF"
-    print("Toggled TeamCheck: " .. (IsTeamCheckEnabled and "ON" or "OFF"))
     updateAllOverlays() -- Update overlays immediately
 end)
 
@@ -171,16 +183,27 @@ sizeInput:GetPropertyChangedSignal("Text"):Connect(function()
     local input = tonumber(sizeInput.Text)
     if input and input >= 1 and input <= 100 then
         HeadSize = input
-        print("Set HeadSize to: " .. HeadSize)
         updateAllOverlays() -- Update overlays immediately
-    else
-        print("Invalid input (temporary): " .. tostring(sizeInput.Text))
     end
 end)
 
 -- When the user finishes typing (e.g., loses focus), ensure the TextBox shows the correct value
 sizeInput.FocusLost:Connect(function()
     sizeInput.Text = tostring(HeadSize)
+end)
+
+-- Auto-update transparency as the user types
+transparencyInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local input = tonumber(transparencyInput.Text)
+    if input and input >= 0 and input <= 1 then
+        Transparency = input
+        updateAllOverlays() -- Update overlays immediately
+    end
+end)
+
+-- When the user finishes typing (e.g., loses focus), ensure the TextBox shows the correct value
+transparencyInput.FocusLost:Connect(function()
+    transparencyInput.Text = tostring(Transparency)
 end)
 
 -- Handle character added/respawn
@@ -194,8 +217,6 @@ local function onCharacterAdded(player, character)
                 createHitboxOverlay(player, hrp)
             end
         end
-    else
-        print("No HumanoidRootPart found for " .. player.Name)
     end
 end
 
@@ -228,10 +249,7 @@ end)
 -- Update overlays when HeadSize or toggle changes
 RunService.RenderStepped:Connect(function()
     local localPlayer = Players.LocalPlayer
-    if not localPlayer then
-        print("LocalPlayer not found")
-        return
-    end
+    if not localPlayer then return end
 
     local localTeam = localPlayer.Team
 
@@ -242,7 +260,9 @@ RunService.RenderStepped:Connect(function()
                 local hrp = char:FindFirstChild("HumanoidRootPart")
                 if hrp then
                     if IsEnabled then
-                        if not hitboxOverlays[player] or hitboxOverlays[player].Size ~= Vector3.new(HeadSize, HeadSize, HeadSize) then
+                        if not hitboxOverlays[player] or 
+                           hitboxOverlays[player].Size ~= Vector3.new(HeadSize, HeadSize, HeadSize) or 
+                           hitboxOverlays[player].Transparency ~= Transparency then
                             createHitboxOverlay(player, hrp)
                         end
                     else

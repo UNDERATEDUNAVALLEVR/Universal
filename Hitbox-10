@@ -207,7 +207,7 @@ RunService.RenderStepped:Connect(function()
                 if hrp then
                     if IsEnabled and (not IsTeamCheckEnabled or (localTeam and player.Team == localTeam)) then
                         hrp.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
-                        hrp.Transparency = 0.8
+                        hrp.Transparency = 0.6
                         hrp.BrickColor = BrickColor.new("Really blue")
                         hrp.Material = Enum.Material.Neon
                         hrp.CanCollide = false

@@ -6,7 +6,8 @@ screenGui.ResetOnSpawn = false
 -- Create Frame
 local frame = Instance.new("Frame")
 frame.Parent = screenGui
-frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+frame.BackgroundColor3 = Color3.fromRGB(26, 26, 26) -- Deep charcoal
+frame.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray
 frame.Size = UDim2.new(0, 200, 0, 100)
 frame.Position = UDim2.new(0.5, -100, 0.5, -50)
 frame.Active = true
@@ -15,38 +16,45 @@ frame.Draggable = true
 -- Create On Button
 local onButton = Instance.new("TextButton")
 onButton.Parent = frame
-onButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+onButton.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Dark gray
+onButton.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray
 onButton.Size = UDim2.new(0, 60, 0, 30)
 onButton.Position = UDim2.new(0, 20, 0, 20)
 onButton.Text = "On"
+onButton.TextColor3 = Color3.fromRGB(224, 224, 224) -- Light gray
 onButton.TextScaled = true
 
 -- Create Off Button
 local offButton = Instance.new("TextButton")
 offButton.Parent = frame
-offButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+offButton.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Dark gray
+offButton.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray
 offButton.Size = UDim2.new(0, 60, 0, 30)
 offButton.Position = UDim2.new(0, 120, 0, 20)
 offButton.Text = "Off"
+offButton.TextColor3 = Color3.fromRGB(224, 224, 224) -- Light gray
 offButton.TextScaled = true
 
 -- Create Destroy Button
 local destroyButton = Instance.new("TextButton")
 destroyButton.Parent = frame
-destroyButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+destroyButton.BackgroundColor3 = Color3.fromRGB(53, 53, 53) -- Slightly lighter gray
+destroyButton.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray
 destroyButton.Size = UDim2.new(0, 160, 0, 30)
 destroyButton.Position = UDim2.new(0, 20, 0, 60)
 destroyButton.Text = "Destroy"
+destroyButton.TextColor3 = Color3.fromRGB(224, 224, 224) -- Light gray
 destroyButton.TextScaled = true
 
 -- Create Status Indicator
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Parent = frame
-statusLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+statusLabel.BackgroundColor3 = Color3.fromRGB(37, 37, 38) -- Slightly lighter dark
+statusLabel.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray
 statusLabel.Size = UDim2.new(0, 200, 0, 30)
 statusLabel.Position = UDim2.new(0, 0, 0, -30)
 statusLabel.Text = "WallHop V2: Off"
-statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+statusLabel.TextColor3 = Color3.fromRGB(112, 74, 74) -- Muted red
 statusLabel.TextScaled = true
 
 -- Variables for Wallhop Functionality
@@ -100,13 +108,17 @@ end
 -- Button Functions
 onButton.MouseButton1Click:Connect(function()
     statusLabel.Text = "WallHop V2: On"
-    statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    statusLabel.TextColor3 = Color3.fromRGB(74, 112, 74) -- Muted green
+    onButton.BackgroundColor3 = Color3.fromRGB(74, 112, 74) -- Muted green
+    offButton.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Reset to dark gray
     toggle = true
 end)
 
 offButton.MouseButton1Click:Connect(function()
     statusLabel.Text = "WallHop V2: Off"
-    statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    statusLabel.TextColor3 = Color3.fromRGB(112, 74, 74) -- Muted red
+    offButton.BackgroundColor3 = Color3.fromRGB(112, 74, 74) -- Muted red
+    onButton.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Reset to dark gray
     toggle = false
 end)
 

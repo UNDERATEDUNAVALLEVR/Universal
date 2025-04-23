@@ -183,7 +183,7 @@ local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
 nowe = false
 
 game:GetService("StarterGui"):SetCore("SendNotification", { 
-	Title = "Io_oI";
+	Title = "Fly Gui";
 	Text = "By ujerald789";
 	Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150"
 })

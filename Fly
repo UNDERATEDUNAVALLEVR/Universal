@@ -1,3 +1,11 @@
+-- Send Notification
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Universal Scripts";
+    Text = "By ujerald789";
+    Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150";
+    Duration = 6;
+}}
+
 local main = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local up = Instance.new("TextButton")

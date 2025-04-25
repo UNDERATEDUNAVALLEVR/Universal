@@ -80,6 +80,8 @@ function SimpleUi.CreateLib(title, themeName)
     local HeaderCorner = Instance.new("UICorner")
     local Title = Instance.new("TextLabel")
     local Close = Instance.new("TextButton")
+    local HideButton = Instance.new("TextButton")
+    local UnhideButton = Instance.new("TextButton")
     local TabContainer = Instance.new("Frame")
     local Tabs = Instance.new("ScrollingFrame")
     local TabList = Instance.new("UIListLayout")
@@ -136,6 +138,49 @@ function SimpleUi.CreateLib(title, themeName)
         wait(0.2)
         ScreenGui:Destroy()
     end)
+
+    HideButton.Name = "HideButton"
+    HideButton.Parent = Header
+    HideButton.BackgroundColor3 = theme.Element
+    HideButton.Position = UDim2.new(0.85, 0, 0.1, 0)
+    HideButton.Size = UDim2.new(0, 20, 0, 20)
+    HideButton.Font = Enum.Font.GothamBold
+    HideButton.Text = "-"
+    HideButton.TextColor3 = theme.Text
+    HideButton.TextSize = 14
+    local HideCorner = Instance.new("UICorner")
+    HideCorner.CornerRadius = UDim.new(0, 4)
+    HideCorner.Parent = HideButton
+
+    UnhideButton.Name = "UnhideButton"
+    UnhideButton.Parent = ScreenGui
+    UnhideButton.BackgroundColor3 = theme.Element
+    UnhideButton.Position = Main.Position
+    UnhideButton.Size = UDim2.new(0, 30, 0, 30)
+    UnhideButton.Font = Enum.Font.GothamBold
+    UnhideButton.Text = "+"
+    UnhideButton.TextColor3 = theme.Text
+    UnhideButton.TextSize = 14
+    UnhideButton.Visible = false
+    local UnhideCorner = Instance.new("UICorner")
+    UnhideCorner.CornerRadius = UDim.new(0, 4)
+    UnhideCorner.Parent = UnhideButton
+
+    HideButton.MouseButton1Click:Connect(function()
+        TweenObject(Main, {Size = UDim2.new(0, 0, 0, 0)}, 0.2)
+        Main.Visible = false
+        UnhideButton.Position = Main.Position
+        UnhideButton.Visible = true
+    end)
+
+    UnhideButton.MouseButton1Click:Connect(function()
+        Main.Visible = true
+        TweenObject(Main, {Size = UDim2.new(0, 400, 0, 300)}, 0.2)
+        UnhideButton.Visible = false
+    end)
+
+    SimpleUi:DraggingEnabled(HideButton, Main)
+    SimpleUi:DraggingEnabled(UnhideButton, UnhideButton)
 
     TabContainer.Name = "TabContainer"
     TabContainer.Parent = Main

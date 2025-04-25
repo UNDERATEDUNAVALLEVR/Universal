@@ -21,22 +21,29 @@ function SimpleUi:DraggingEnabled(frame, parent)
     local dragging = false
     local dragInput, mousePos, framePos
 
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            mousePos = input.Position
-            framePos = parent.Position
+    local function startDrag(input)
+        dragging = true
+        mousePos = input.Position
+        framePos = parent.Position
+    end
 
+    local function endDrag()
+        dragging = false
+    end
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            startDrag(input)
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
+                    endDrag()
                 end
             end)
         end
     end)
 
     frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
@@ -149,16 +156,16 @@ function SimpleUi.CreateLib(title, themeName)
     SimpleUi:DraggingEnabled(Header, Main)
 
     local TabsAPI = {}
+    local firstTab = true
 
     function TabsAPI:NewTab(tabName)
         tabName = tabName or "Tab"
         local TabButton = Instance.new("TextButton")
         local Page = Instance.new("ScrollingFrame")
         local PageList = Instance.new("UIListLayout")
-        local first = true
 
         TabButton.Name = tabName .. "Button"
-        TabButton.Parent = Tabs
+        TabButton.Parent = TabButton.Parent or Tabs -- Ensure TabButton has a parent
         TabButton.BackgroundColor3 = theme.Element
         TabButton.Size = UDim2.new(0, 100, 0, 25)
         TabButton.Font = Enum.Font.Gotham
@@ -166,21 +173,21 @@ function SimpleUi.CreateLib(title, themeName)
         TabButton.TextColor3 = theme.Text
         TabButton.TextSize = 12
         TabButton.AutoButtonColor = false
-        TabButton.BackgroundTransparency = 0.5
+        TabButton.BackgroundTransparency = firstTab and 0 or 0.5
 
         local TabCorner = Instance.new("UICorner")
         TabCorner.CornerRadius = UDim.new(0, 4)
         TabCorner.Parent = TabButton
 
         Page.Name = tabName .. "Page"
-        Page.Parent = Pages
+        Page.Parent = Page.Parent or Pages -- Ensure Page has a parent
         Page.BackgroundTransparency = 1
         Page.Size = UDim2.new(1, -10, 1, -10)
         Page.Position = UDim2.new(0, 5, 0, 5)
         Page.CanvasSize = UDim2.new(0, 0, 0, 0)
         Page.ScrollBarThickness = 4
         Page.ScrollBarImageColor3 = theme.Accent
-        Page.Visible = false
+        Page.Visible = firstTab
 
         PageList.Name = "PageList"
         PageList.Parent = Page
@@ -193,12 +200,6 @@ function SimpleUi.CreateLib(title, themeName)
 
         PageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
 
-        if first then
-            first = false
-            Page.Visible = true
-            TabButton.BackgroundTransparency = 0
-        end
-
         TabButton.MouseButton1Click:Connect(function()
             for _, v in pairs(Pages:GetChildren()) do
                 v.Visible = false
@@ -210,7 +211,12 @@ function SimpleUi.CreateLib(title, themeName)
                 end
             end
             TweenObject(TabButton, {BackgroundTransparency = 0}, 0.2)
+            UpdateCanvasSize()
         end)
+
+        if firstTab then
+            firstTab = false
+        end
 
         local SectionsAPI = {}
 
@@ -221,7 +227,7 @@ function SimpleUi.CreateLib(title, themeName)
             local SectionTitle = Instance.new("TextLabel")
 
             SectionFrame.Name = sectionName
-            SectionFrame.Parent = Page
+            SectionFrame.Parent = SectionFrame.Parent or Page -- Ensure SectionFrame has a parent
             SectionFrame.BackgroundTransparency = 1
             SectionFrame.Size = UDim2.new(1, 0, 0, 30)
 
@@ -259,7 +265,7 @@ function SimpleUi.CreateLib(title, themeName)
                 local ButtonText = Instance.new("TextLabel")
 
                 Button.Name = buttonName
-                Button.Parent = SectionFrame
+                Button.Parent = Button.Parent or SectionFrame -- Ensure Button has a parent
                 Button.BackgroundColor3 = theme.Element
                 Button.Size = UDim2.new(1, -10, 0, 30)
                 Button.Position = UDim2.new(0, 5, 0, 0)

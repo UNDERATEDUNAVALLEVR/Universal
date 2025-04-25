@@ -2,7 +2,6 @@ local SimpleUi = {}
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
 local function TweenObject(obj, properties, duration)
     TweenService:Create(obj, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties):Play()
@@ -81,8 +80,11 @@ function SimpleUi.CreateLib(title, themeName)
     local HeaderCorner = Instance.new("UICorner")
     local Title = Instance.new("TextLabel")
     local Close = Instance.new("TextButton")
-    local Tabs = Instance.new("Frame")
+    local TabContainer = Instance.new("Frame")
+    local Tabs = Instance.new("ScrollingFrame")
     local TabList = Instance.new("UIListLayout")
+    local ScrollLeft = Instance.new("TextButton")
+    local ScrollRight = Instance.new("TextButton")
     local Pages = Instance.new("Frame")
 
     ScreenGui.Name = uiName
@@ -135,17 +137,54 @@ function SimpleUi.CreateLib(title, themeName)
         ScreenGui:Destroy()
     end)
 
+    TabContainer.Name = "TabContainer"
+    TabContainer.Parent = Main
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.Position = UDim2.new(0, 0, 0.1, 0)
+    TabContainer.Size = UDim2.new(1, 0, 0, 30)
+
     Tabs.Name = "Tabs"
-    Tabs.Parent = Main
+    Tabs.Parent = TabContainer
     Tabs.BackgroundTransparency = 1
-    Tabs.Position = UDim2.new(0, 0, 0.1, 0)
-    Tabs.Size = UDim2.new(1, 0, 0, 30)
+    Tabs.Position = UDim2.new(0.05, 0, 0, 0)
+    Tabs.Size = UDim2.new(0.85, 0, 1, 0)
+    Tabs.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Tabs.ScrollBarThickness = 0
+    Tabs.ClipsDescendants = true
 
     TabList.Name = "TabList"
     TabList.Parent = Tabs
     TabList.FillDirection = Enum.FillDirection.Horizontal
     TabList.SortOrder = Enum.SortOrder.LayoutOrder
     TabList.Padding = UDim.new(0, 5)
+
+    ScrollLeft.Name = "ScrollLeft"
+    ScrollLeft.Parent = TabContainer
+    ScrollLeft.BackgroundColor3 = theme.Element
+    ScrollLeft.Size = UDim2.new(0, 20, 0, 25)
+    ScrollLeft.Position = UDim2.new(0, 5, 0, 2.5)
+    ScrollLeft.Font = Enum.Font.GothamBold
+    ScrollLeft.Text = "<"
+    ScrollLeft.TextColor3 = theme.Text
+    ScrollLeft.TextSize = 12
+    ScrollLeft.Visible = false
+    local LeftCorner = Instance.new("UICorner")
+    LeftCorner.CornerRadius = UDim.new(0, 4)
+    LeftCorner.Parent = ScrollLeft
+
+    ScrollRight.Name = "ScrollRight"
+    ScrollRight.Parent = TabContainer
+    ScrollRight.BackgroundColor3 = theme.Element
+    ScrollRight.Size = UDim2.new(0, 20, 0, 25)
+    ScrollRight.Position = UDim2.new(0.95, -20, 0, 2.5)
+    ScrollRight.Font = Enum.Font.GothamBold
+    ScrollRight.Text = ">"
+    ScrollRight.TextColor3 = theme.Text
+    ScrollRight.TextSize = 12
+    ScrollRight.Visible = false
+    local RightCorner = Instance.new("UICorner")
+    RightCorner.CornerRadius = UDim.new(0, 4)
+    RightCorner.Parent = ScrollRight
 
     Pages.Name = "Pages"
     Pages.Parent = Main
@@ -155,21 +194,47 @@ function SimpleUi.CreateLib(title, themeName)
 
     SimpleUi:DraggingEnabled(Header, Main)
 
+    local function UpdateScrollButtons()
+        local canvasWidth = TabList.AbsoluteContentSize.X
+        local frameWidth = Tabs.AbsoluteSize.X
+        ScrollLeft.Visible = Tabs.CanvasPosition.X > 0
+        ScrollRight.Visible = canvasWidth > frameWidth and Tabs.CanvasPosition.X < canvasWidth - frameWidth
+    end
+
+    ScrollLeft.MouseButton1Click:Connect(function()
+        local newPos = math.max(0, Tabs.CanvasPosition.X - 100)
+        TweenObject(Tabs, {CanvasPosition = Vector2.new(newPos, 0)}, 0.2)
+        UpdateScrollButtons()
+    end)
+
+    ScrollRight.MouseButton1Click:Connect(function()
+        local canvasWidth = TabList.AbsoluteContentSize.X
+        local frameWidth = Tabs.AbsoluteSize.X
+        local newPos = math.min(canvasWidth - frameWidth, Tabs.CanvasPosition.X + 100)
+        TweenObject(Tabs, {CanvasPosition = Vector2.new(newPos, 0)}, 0.2)
+        UpdateScrollButtons()
+    end)
+
+    TabList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateScrollButtons)
+    Tabs:GetPropertyChangedSignal("CanvasPosition"):Connect(UpdateScrollButtons)
+
     local TabsAPI = {}
     local firstTab = true
 
     function TabsAPI:NewTab(tabName)
         tabName = tabName or "Tab"
         local TabButton = Instance.new("TextButton")
+        local TextContainer = Instance.new("Frame")
+        local TabText = Instance.new("TextLabel")
         local Page = Instance.new("ScrollingFrame")
         local PageList = Instance.new("UIListLayout")
 
         TabButton.Name = tabName .. "Button"
-        TabButton.Parent = TabButton.Parent or Tabs -- Ensure TabButton has a parent
+        TabButton.Parent = Tabs
         TabButton.BackgroundColor3 = theme.Element
         TabButton.Size = UDim2.new(0, 100, 0, 25)
-        TabButton.Font = Enum.Font.Gotham
-        TabButton.Text = tabName
+        TabButton.Font = Enum.Font.SourceSans
+        TabButton.Text = ""
         TabButton.TextColor3 = theme.Text
         TabButton.TextSize = 12
         TabButton.AutoButtonColor = false
@@ -179,8 +244,48 @@ function SimpleUi.CreateLib(title, themeName)
         TabCorner.CornerRadius = UDim.new(0, 4)
         TabCorner.Parent = TabButton
 
+        TextContainer.Name = "TextContainer"
+        TextContainer.Parent = TabButton
+        TextContainer.BackgroundTransparency = 1
+        TextContainer.Size = UDim2.new(1, -10, 1, 0)
+        TextContainer.Position = UDim2.new(0, 5, 0, 0)
+        TextContainer.ClipsDescendants = true
+
+        TabText.Name = "TabText"
+        TabText.Parent = TextContainer
+        TabText.BackgroundTransparency = 1
+        TabText.Size = UDim2.new(0, 0, 1, 0)
+        TabText.Position = UDim2.new(0, 0, 0, 0)
+        TabText.Font = Enum.Font.Gotham
+        TabText.Text = tabName
+        TabText.TextColor3 = theme.Text
+        TabText.TextSize = 12
+        TabText.TextXAlignment = Enum.TextXAlignment.Left
+        TabText.TextTransparency = 0
+
+        local textBounds = TabText.TextBounds.X
+        local maxWidth = TabButton.AbsoluteSize.X - 10
+        if textBounds > maxWidth then
+            TabText.Size = UDim2.new(0, textBounds, 1, 0)
+            local function slideText()
+                if TabText.Parent then
+                    TweenObject(TabText, {Position = UDim2.new(0, -textBounds, 0, 0)}, 3)
+                    wait(3.5)
+                    TabText.Position = UDim2.new(0, maxWidth, 0, 0)
+                    TweenObject(TabText, {Position = UDim2.new(0, 0, 0, 0)}, 0.5)
+                    wait(1)
+                    if TabText.Parent then
+                        spawn(slideText)
+                    end
+                end
+            end
+            spawn(slideText)
+        else
+            TabText.Size = UDim2.new(1, -10, 1, 0)
+        end
+
         Page.Name = tabName .. "Page"
-        Page.Parent = Page.Parent or Pages -- Ensure Page has a parent
+        Page.Parent = Pages
         Page.BackgroundTransparency = 1
         Page.Size = UDim2.new(1, -10, 1, -10)
         Page.Position = UDim2.new(0, 5, 0, 5)
@@ -196,6 +301,7 @@ function SimpleUi.CreateLib(title, themeName)
 
         local function UpdateCanvasSize()
             Page.CanvasSize = UDim2.new(0, 0, 0, PageList.AbsoluteContentSize.Y + 10)
+            UpdateScrollButtons()
         end
 
         PageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
@@ -227,7 +333,7 @@ function SimpleUi.CreateLib(title, themeName)
             local SectionTitle = Instance.new("TextLabel")
 
             SectionFrame.Name = sectionName
-            SectionFrame.Parent = SectionFrame.Parent or Page -- Ensure SectionFrame has a parent
+            SectionFrame.Parent = Page
             SectionFrame.BackgroundTransparency = 1
             SectionFrame.Size = UDim2.new(1, 0, 0, 30)
 
@@ -265,7 +371,7 @@ function SimpleUi.CreateLib(title, themeName)
                 local ButtonText = Instance.new("TextLabel")
 
                 Button.Name = buttonName
-                Button.Parent = Button.Parent or SectionFrame -- Ensure Button has a parent
+                Button.Parent = SectionFrame
                 Button.BackgroundColor3 = theme.Element
                 Button.Size = UDim2.new(1, -10, 0, 30)
                 Button.Position = UDim2.new(0, 5, 0, 0)

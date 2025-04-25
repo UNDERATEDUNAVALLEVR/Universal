@@ -1,0 +1,122 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- UI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GymGui"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+
+local frame = Instance.new("Frame")
+frame.Parent = screenGui
+frame.Size = UDim2.new(0, 200, 0, 130)
+frame.Position = UDim2.new(0.5, -100, 0.5, -65)
+frame.BackgroundColor3 = Color3.fromRGB(26, 26, 26) -- Deep charcoal (#1a1a1a)
+frame.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray (#333333)
+frame.Active = true
+frame.Draggable = true
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Parent = frame
+statusLabel.Size = UDim2.new(0, 200, 0, 30)
+statusLabel.Position = UDim2.new(0, 0, 0, -30)
+statusLabel.BackgroundColor3 = Color3.fromRGB(37, 37, 38) -- Slightly lighter dark (#252526)
+statusLabel.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray (#333333)
+statusLabel.Text = "Gym: Idle"
+statusLabel.TextColor3 = Color3.fromRGB(112, 74, 74) -- Muted red (#704a4a)
+statusLabel.TextScaled = true
+
+local addWeightButton = Instance.new("TextButton")
+addWeightButton.Parent = frame
+addWeightButton.Text = "Add"
+addWeightButton.Size = UDim2.new(0, 60, 0, 30)
+addWeightButton.Position = UDim2.new(0, 20, 0, 20)
+addWeightButton.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Dark gray (#2a2a2a)
+addWeightButton.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray (#333333)
+addWeightButton.TextColor3 = Color3.fromRGB(224, 224, 224) -- Light gray (#e0e0e0)
+addWeightButton.TextScaled = true
+
+local minusWeightButton = Instance.new("TextButton")
+minusWeightButton.Parent = frame
+minusWeightButton.Text = "Minus"
+minusWeightButton.Size = UDim2.new(0, 60, 0, 30)
+minusWeightButton.Position = UDim2.new(0, 120, 0, 20)
+minusWeightButton.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Dark gray (#2a2a2a)
+minusWeightButton.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray (#333333)
+minusWeightButton.TextColor3 = Color3.fromRGB(224, 224, 224) -- Light gray (#e0e0e0)
+minusWeightButton.TextScaled = true
+
+local leaveButton = Instance.new("TextButton")
+leaveButton.Parent = frame
+leaveButton.Text = "Leave"
+leaveButton.Size = UDim2.new(0, 60, 0, 30)
+leaveButton.Position = UDim2.new(0, 70, 0, 60)
+leaveButton.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Dark gray (#2a2a2a)
+leaveButton.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray (#333333)
+leaveButton.TextColor3 = Color3.fromRGB(224, 224, 224) -- Light gray (#e0e0e0)
+leaveButton.TextScaled = true
+
+local destroyButton = Instance.new("TextButton")
+destroyButton.Parent = frame
+destroyButton.Text = "Destroy"
+destroyButton.Size = UDim2.new(0, 160, 0, 30)
+destroyButton.Position = UDim2.new(0, 20, 0, 90)
+destroyButton.BackgroundColor3 = Color3.fromRGB(53, 53, 53) -- Slightly lighter gray (#353535)
+destroyButton.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray (#333333)
+destroyButton.TextColor3 = Color3.fromRGB(224, 224, 224) -- Light gray (#e0e0e0)
+destroyButton.TextScaled = true
+
+-- Button Functions
+local function flashButton(button, actionText)
+    button.BackgroundColor3 = Color3.fromRGB(74, 112, 74) -- Muted green (#4a704a)
+    statusLabel.Text = "Gym: " .. actionText
+    statusLabel.TextColor3 = Color3.fromRGB(74, 112, 74) -- Muted green (#4a704a)
+    task.wait(0.5)
+    button.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Dark gray (#2a2a2a)
+    statusLabel.Text = "Gym: Idle"
+    statusLabel.TextColor3 = Color3.fromRGB(112, 74, 74) -- Muted red (#704a4a)
+end
+
+addWeightButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        local remote = game:GetService("Players").LocalPlayer.PlayerGui.StrengthGui.Frame.AddWeightButton.LocalScript.RemoteEvent
+        remote:FireServer()
+        flashButton(addWeightButton, "Added Weight")
+    end, function(err)
+        statusLabel.Text = "Error: Add failed"
+    end)
+end)
+
+minusWeightButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        local remote = game:GetService("Players").LocalPlayer.PlayerGui.StrengthGui.Frame.SubtractWeightButton.LocalScript.RemoteEvent
+        remote:FireServer()
+        flashButton(minusWeightButton, "Removed Weight")
+    end, function(err)
+        statusLabel.Text = "Error: Minus failed"
+    end)
+end)
+
+leaveButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        local remote = game:GetService("Players").LocalPlayer.PlayerGui.StrengthGui.Frame.LeaveButton.LocalScript.RemoteEvent
+        remote:FireServer()
+        flashButton(leaveButton, "Left Training")
+    end, function(err)
+        statusLabel.Text = "Error: Leave failed"
+    end)
+end)
+
+destroyButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- Notification
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "GGE Script";
+    Text = "By ujerald789";
+    Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150";
+    Duration = 5;
+})

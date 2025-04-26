@@ -233,33 +233,7 @@ function JeraldUi.CreateLib(title, themeName)
         tabName = tabName or "Tab"
         local TabButton = Instance.new("TextButton")
         local TextContainer = Instance.new("Frame")
-        local TabText = Instance.new("TextLabel")
-        local Page = Instance.new("ScrollingFrame")
-        local PageList = Instance.new("UIListLayout")
-
-        TabButton.Name = tabName .. "Button"
-        TabButton.Parent = Tabs
-        TabButton.BackgroundColor3 = theme.Element
-        TabButton.Size = UDim2.new(0, 100, 0, 25)
-        TabButton.Font = Enum.Font.SourceSans
-        TabButton.Text = ""
-        TabButton.TextColor3 = theme.Text
-        TabButton.TextSize = 12
-        TabButton.AutoButtonColor = false
-        TabButton.BackgroundTransparency = firstTab and 0 or 0.5
-
-        local TabCorner = Instance.new("UICorner")
-        TabCorner.CornerRadius = UDim.new(0, 4)
-        TabCorner.Parent = TabButton
-
-        TextContainer.Name = "TextContainer"
-        TextContainer.Parent = TabButton
-        TextContainer.BackgroundTransparency = 1
-        TextContainer.Size = UDim2.new(1, -10, 1, 0)
-        TextContainer.Position = UDim2.new(0, 5, 0, 0)
-        TextContainer.ClipsDescendants = true
-
-        TabText.Name = "TabText"
+        local TabText = Instance Annotations:
         TabText.Parent = TextContainer
         TabText.BackgroundTransparency = 1
         TabText.Size = UDim2.new(0, 0, 1, 0)
@@ -439,6 +413,58 @@ function JeraldUi.CreateLib(title, themeName)
                     TweenObject(Button, {BackgroundColor3 = theme.Accent}, 0.1)
                     wait(0.1)
                     TweenObject(Button, {BackgroundColor3 = theme.Element}, 0.1)
+                end)
+
+                Button.MouseEnter:Connect(function()
+                    TweenObject(Button, {BackgroundColor3 = Color3.fromRGB(theme.Element.r * 255 + 10, theme.Element.g * 255 + 10, theme.Element.b * 255 + 10)}, 0.1)
+                end)
+
+                Button.MouseLeave:Connect(function()
+                    TweenObject(Button, {BackgroundColor3 = theme.Element}, 0.1)
+                end)
+
+                UpdateSectionSize()
+            end
+
+            function ElementsAPI:NewDestroyButton(buttonName, info, callback)
+                buttonName = buttonName or "Destroy Button"
+                info = info or "Destroys UI and executes"
+                callback = callback or function() end
+
+                local Button = Instance.new("TextButton")
+                local ButtonCorner = Instance.new("UICorner")
+                local ButtonText = Instance.new("TextLabel")
+
+                Button.Name = buttonName
+                Button.Parent = SectionFrame
+                Button.BackgroundColor3 = theme.Element
+                Button.Size = UDim2.new(1, -10, 0, 30)
+                Button.Position = UDim2.new(0, 5, 0, 0)
+                Button.Font = Enum.Font.SourceSans
+                Button.Text = ""
+                Button.TextColor3 = theme.Text
+                Button.TextSize = 14
+                Button.AutoButtonColor = false
+
+                ButtonCorner.CornerRadius = UDim.new(0, 4)
+                ButtonCorner.Parent = Button
+
+                ButtonText.Name = "ButtonText"
+                ButtonText.Parent = Button
+                ButtonText.BackgroundTransparency = 1
+                ButtonText.Size = UDim2.new(1, -10, 1, 0)
+                ButtonText.Position = UDim2.new(0, 5, 0, 0)
+                ButtonText.Font = Enum.Font.Gotham
+                ButtonText.Text = buttonName
+                ButtonText.TextColor3 = theme.Text
+                ButtonText.TextSize = 14
+                ButtonText.TextXAlignment = Enum.TextXAlignment.Left
+
+                Button.MouseButton1Click:Connect(function()
+                    pcall(callback)
+                    TweenObject(Main, {Size = UDim2.new(0, 0, 0, 0)}, 0.2)
+                    wait(0.2)
+                    ScreenGui:Destroy()
                 end)
 
                 Button.MouseEnter:Connect(function()

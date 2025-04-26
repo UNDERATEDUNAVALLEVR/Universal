@@ -118,5 +118,5 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "GGE Script";
     Text = "By ujerald789";
     Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150";
-    Duration = 5;
+    Duration = 3;
 })

@@ -7,12 +7,63 @@ local function TweenObject(obj, properties, duration)
     TweenService:Create(obj, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties):Play()
 end
 
-local theme = {
-    Background = Color3.fromRGB(30, 30, 35),
-    Accent = Color3.fromRGB(100, 100, 255),
-    Text = Color3.fromRGB(220, 220, 220),
-    Element = Color3.fromRGB(40, 40, 45),
-    Border = Color3.fromRGB(50, 50, 55)
+local themes = {
+    DarkTheme = {
+        Background = Color3.fromRGB(30, 30, 35),
+        Accent = Color3.fromRGB(100, 100, 255),
+        Text = Color3.fromRGB(220, 220, 220),
+        Element = Color3.fromRGB(40, 40, 45),
+        Border = Color3.fromRGB(50, 50, 55)
+    },
+    RedTheme = {
+        Background = Color3.fromRGB(35, 25, 25),
+        Accent = Color3.fromRGB(255, 80, 80),
+        Text = Color3.fromRGB(230, 200, 200),
+        Element = Color3.fromRGB(50, 30, 30),
+        Border = Color3.fromRGB(60, 40, 40)
+    },
+    BlueTheme = {
+        Background = Color3.fromRGB(25, 30, 35),
+        Accent = Color3.fromRGB(80, 120, 255),
+        Text = Color3.fromRGB(200, 210, 230),
+        Element = Color3.fromRGB(30, 40, 50),
+        Border = Color3.fromRGB(40, 50, 60)
+    },
+    GreenTheme = {
+        Background = Color3.fromRGB(25, 35, 30),
+        Accent = Color3.fromRGB(80, 255, 120),
+        Text = Color3.fromRGB(200, 230, 210),
+        Element = Color3.fromRGB(30, 50, 40),
+        Border = Color3.fromRGB(40, 60, 50)
+    },
+    PurpleTheme = {
+        Background = Color3.fromRGB(30, 25, 35),
+        Accent = Color3.fromRGB(180, 80, 255),
+        Text = Color3.fromRGB(220, 200, 230),
+        Element = Color3.fromRGB(40, 30, 50),
+        Border = Color3.fromRGB(50, 40, 60)
+    },
+    OrangeTheme = {
+        Background = Color3.fromRGB(35, 30, 25),
+        Accent = Color3.fromRGB(255, 150, 80),
+        Text = Color3.fromRGB(230, 210, 200),
+        Element = Color3.fromRGB(50, 40, 30),
+        Border = Color3.fromRGB(60, 50, 40)
+    },
+    CyanTheme = {
+        Background = Color3.fromRGB(25, 35, 35),
+        Accent = Color3.fromRGB(80, 255, 255),
+        Text = Color3.fromRGB(200, 230, 230),
+        Element = Color3.fromRGB(30, 50, 50),
+        Border = Color3.fromRGB(40, 60, 60)
+    },
+    PinkTheme = {
+        Background = Color3.fromRGB(35, 25, 35),
+        Accent = Color3.fromRGB(255, 100, 180),
+        Text = Color3.fromRGB(230, 200, 220),
+        Element = Color3.fromRGB(50, 30, 50),
+        Border = Color3.fromRGB(60, 40, 60)
+    }
 }
 
 function JeraldUi:DraggingEnabled(frame, parent)
@@ -56,7 +107,7 @@ function JeraldUi:DraggingEnabled(frame, parent)
 end
 
 local uiName = tostring(math.random(1, 100)) .. tostring(math.random(1, 50))
-local storedPosition = UDim2.new(0.35, 0, 0.3, 0) -- Default position
+local storedPosition = UDim2.new(0.35, 0, 0.3, 0)
 
 function JeraldUi:ToggleUI()
     if game.CoreGui[uiName].Enabled then
@@ -68,6 +119,9 @@ end
 
 function JeraldUi.CreateLib(title, themeName)
     title = title or "Jerald UI"
+    themeName = themeName or "DarkTheme"
+    local theme = themes[themeName] or themes.DarkTheme
+
     local success, result = pcall(function()
         for _, v in pairs(game.CoreGui:GetChildren()) do
             if v:IsA("ScreenGui") and v.Name == title then
@@ -367,7 +421,7 @@ function JeraldUi.CreateLib(title, themeName)
                 SectionText.Text = sectionName
                 SectionText.TextColor3 = theme.Accent
                 SectionText.TextSize = 14
-                SectionText.TextXAlignment = Enum.TextXAlignment.Left
+                TextXAlignment = Enum.TextXAlignment.Left
                 SectionText.TextTransparency = 0
 
                 local textBounds = SectionText.TextBounds.X

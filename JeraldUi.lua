@@ -1,4 +1,4 @@
-local SimpleUi = {}
+local JeraldUi = {}
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -15,7 +15,7 @@ local theme = {
     Border = Color3.fromRGB(50, 50, 55)
 }
 
-function SimpleUi:DraggingEnabled(frame, parent)
+function JeraldUi:DraggingEnabled(frame, parent)
     parent = parent or frame
     local dragging = false
     local dragInput, mousePos, framePos
@@ -56,8 +56,9 @@ function SimpleUi:DraggingEnabled(frame, parent)
 end
 
 local uiName = tostring(math.random(1, 100)) .. tostring(math.random(1, 50))
+local storedPosition = UDim2.new(0.35, 0, 0.3, 0) -- Default position
 
-function SimpleUi:ToggleUI()
+function JeraldUi:ToggleUI()
     if game.CoreGui[uiName].Enabled then
         game.CoreGui[uiName].Enabled = false
     else
@@ -65,8 +66,8 @@ function SimpleUi:ToggleUI()
     end
 end
 
-function SimpleUi.CreateLib(title, themeName)
-    title = title or "Simple UI"
+function JeraldUi.CreateLib(title, themeName)
+    title = title or "Jerald UI"
     for _, v in pairs(game.CoreGui:GetChildren()) do
         if v:IsA("ScreenGui") and v.Name == title then
             v:Destroy()
@@ -85,8 +86,6 @@ function SimpleUi.CreateLib(title, themeName)
     local TabContainer = Instance.new("Frame")
     local Tabs = Instance.new("ScrollingFrame")
     local TabList = Instance.new("UIListLayout")
-    local ScrollLeft = Instance.new("TextButton")
-    local ScrollRight = Instance.new("TextButton")
     local Pages = Instance.new("Frame")
 
     ScreenGui.Name = uiName
@@ -97,7 +96,7 @@ function SimpleUi.CreateLib(title, themeName)
     Main.Name = "Main"
     Main.Parent = ScreenGui
     Main.BackgroundColor3 = theme.Background
-    Main.Position = UDim2.new(0.35, 0, 0.3, 0)
+    Main.Position = storedPosition
     Main.Size = UDim2.new(0, 400, 0, 300)
     Main.ClipsDescendants = true
 
@@ -155,7 +154,7 @@ function SimpleUi.CreateLib(title, themeName)
     UnhideButton.Name = "UnhideButton"
     UnhideButton.Parent = ScreenGui
     UnhideButton.BackgroundColor3 = theme.Element
-    UnhideButton.Position = Main.Position
+    UnhideButton.Position = storedPosition
     UnhideButton.Size = UDim2.new(0, 30, 0, 30)
     UnhideButton.Font = Enum.Font.GothamBold
     UnhideButton.Text = "+"
@@ -167,20 +166,30 @@ function SimpleUi.CreateLib(title, themeName)
     UnhideCorner.Parent = UnhideButton
 
     HideButton.MouseButton1Click:Connect(function()
+        storedPosition = Main.Position
         TweenObject(Main, {Size = UDim2.new(0, 0, 0, 0)}, 0.2)
         Main.Visible = false
-        UnhideButton.Position = Main.Position
+        UnhideButton.Position = storedPosition
         UnhideButton.Visible = true
     end)
 
     UnhideButton.MouseButton1Click:Connect(function()
+        Main.Position = storedPosition
         Main.Visible = true
         TweenObject(Main, {Size = UDim2.new(0, 400, 0, 300)}, 0.2)
         UnhideButton.Visible = false
     end)
 
-    SimpleUi:DraggingEnabled(HideButton, Main)
-    SimpleUi:DraggingEnabled(UnhideButton, UnhideButton)
+    JeraldUi:DraggingEnabled(HideButton, Main)
+    JeraldUi:DraggingEnabled(UnhideButton, UnhideButton)
+    JeraldUi:DraggingEnabled(Header, Main)
+
+    -- Update storedPosition when Main is dragged
+    Main:GetPropertyChangedSignal("Position"):Connect(function()
+        if Main.Visible then
+            storedPosition = Main.Position
+        end
+    end)
 
     TabContainer.Name = "TabContainer"
     TabContainer.Parent = Main
@@ -191,10 +200,12 @@ function SimpleUi.CreateLib(title, themeName)
     Tabs.Name = "Tabs"
     Tabs.Parent = TabContainer
     Tabs.BackgroundTransparency = 1
-    Tabs.Position = UDim2.new(0.05, 0, 0, 0)
-    Tabs.Size = UDim2.new(0.85, 0, 1, 0)
+    Tabs.Position = UDim2.new(0, 0, 0, 0)
+    Tabs.Size = UDim2.new(1, 0, 1, 0)
     Tabs.CanvasSize = UDim2.new(0, 0, 0, 0)
-    Tabs.ScrollBarThickness = 0
+    Tabs.ScrollBarThickness = 4
+    Tabs.ScrollBarImageColor3 = theme.Accent
+    Tabs.ScrollingDirection = Enum.ScrollingDirection.X
     Tabs.ClipsDescendants = true
 
     TabList.Name = "TabList"
@@ -203,65 +214,17 @@ function SimpleUi.CreateLib(title, themeName)
     TabList.SortOrder = Enum.SortOrder.LayoutOrder
     TabList.Padding = UDim.new(0, 5)
 
-    ScrollLeft.Name = "ScrollLeft"
-    ScrollLeft.Parent = TabContainer
-    ScrollLeft.BackgroundColor3 = theme.Element
-    ScrollLeft.Size = UDim2.new(0, 20, 0, 25)
-    ScrollLeft.Position = UDim2.new(0, 5, 0, 2.5)
-    ScrollLeft.Font = Enum.Font.GothamBold
-    ScrollLeft.Text = "<"
-    ScrollLeft.TextColor3 = theme.Text
-    ScrollLeft.TextSize = 12
-    ScrollLeft.Visible = false
-    local LeftCorner = Instance.new("UICorner")
-    LeftCorner.CornerRadius = UDim.new(0, 4)
-    LeftCorner.Parent = ScrollLeft
-
-    ScrollRight.Name = "ScrollRight"
-    ScrollRight.Parent = TabContainer
-    ScrollRight.BackgroundColor3 = theme.Element
-    ScrollRight.Size = UDim2.new(0, 20, 0, 25)
-    ScrollRight.Position = UDim2.new(0.95, -20, 0, 2.5)
-    ScrollRight.Font = Enum.Font.GothamBold
-    ScrollRight.Text = ">"
-    ScrollRight.TextColor3 = theme.Text
-    ScrollRight.TextSize = 12
-    ScrollRight.Visible = false
-    local RightCorner = Instance.new("UICorner")
-    RightCorner.CornerRadius = UDim.new(0, 4)
-    RightCorner.Parent = ScrollRight
-
     Pages.Name = "Pages"
     Pages.Parent = Main
     Pages.BackgroundTransparency = 1
     Pages.Position = UDim2.new(0, 0, 0.2, 0)
     Pages.Size = UDim2.new(1, 0, 0.8, 0)
 
-    SimpleUi:DraggingEnabled(Header, Main)
-
-    local function UpdateScrollButtons()
-        local canvasWidth = TabList.AbsoluteContentSize.X
-        local frameWidth = Tabs.AbsoluteSize.X
-        ScrollLeft.Visible = Tabs.CanvasPosition.X > 0
-        ScrollRight.Visible = canvasWidth > frameWidth and Tabs.CanvasPosition.X < canvasWidth - frameWidth
+    local function UpdateTabCanvasSize()
+        Tabs.CanvasSize = UDim2.new(0, TabList.AbsoluteContentSize.X + 10, 0, 0)
     end
 
-    ScrollLeft.MouseButton1Click:Connect(function()
-        local newPos = math.max(0, Tabs.CanvasPosition.X - 100)
-        TweenObject(Tabs, {CanvasPosition = Vector2.new(newPos, 0)}, 0.2)
-        UpdateScrollButtons()
-    end)
-
-    ScrollRight.MouseButton1Click:Connect(function()
-        local canvasWidth = TabList.AbsoluteContentSize.X
-        local frameWidth = Tabs.AbsoluteSize.X
-        local newPos = math.min(canvasWidth - frameWidth, Tabs.CanvasPosition.X + 100)
-        TweenObject(Tabs, {CanvasPosition = Vector2.new(newPos, 0)}, 0.2)
-        UpdateScrollButtons()
-    end)
-
-    TabList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateScrollButtons)
-    Tabs:GetPropertyChangedSignal("CanvasPosition"):Connect(UpdateScrollButtons)
+    TabList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateTabCanvasSize)
 
     local TabsAPI = {}
     local firstTab = true
@@ -346,7 +309,7 @@ function SimpleUi.CreateLib(title, themeName)
 
         local function UpdateCanvasSize()
             Page.CanvasSize = UDim2.new(0, 0, 0, PageList.AbsoluteContentSize.Y + 10)
-            UpdateScrollButtons()
+            UpdateTabCanvasSize()
         end
 
         PageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
@@ -375,7 +338,8 @@ function SimpleUi.CreateLib(title, themeName)
             sectionName = sectionName or "Section"
             local SectionFrame = Instance.new("Frame")
             local SectionList = Instance.new("UIListLayout")
-            local SectionTitle = Instance.new("TextLabel")
+            local TextContainer = Instance.new("Frame")
+            local SectionText = Instance.new("TextLabel")
 
             SectionFrame.Name = sectionName
             SectionFrame.Parent = Page
@@ -387,15 +351,45 @@ function SimpleUi.CreateLib(title, themeName)
             SectionList.SortOrder = Enum.SortOrder.LayoutOrder
             SectionList.Padding = UDim.new(0, 5)
 
-            SectionTitle.Name = "SectionTitle"
-            SectionTitle.Parent = SectionFrame
-            SectionTitle.BackgroundTransparency = 1
-            SectionTitle.Size = UDim2.new(1, 0, 0, 20)
-            SectionTitle.Font = Enum.Font.GothamBold
-            SectionTitle.Text = sectionName
-            SectionTitle.TextColor3 = theme.Accent
-            SectionTitle.TextSize = 14
-            SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+            TextContainer.Name = "TextContainer"
+            TextContainer.Parent = SectionFrame
+            TextContainer.BackgroundTransparency = 1
+            TextContainer.Size = UDim2.new(1, -10, 0, 20)
+            TextContainer.Position = UDim2.new(0, 5, 0, 0)
+            TextContainer.ClipsDescendants = true
+
+            SectionText.Name = "SectionText"
+            SectionText.Parent = TextContainer
+            SectionText.BackgroundTransparency = 1
+            SectionText.Size = UDim2.new(0, 0, 1, 0)
+            SectionText.Position = UDim2.new(0, 0, 0, 0)
+            SectionText.Font = Enum.Font.GothamBold
+            SectionText.Text = sectionName
+            SectionText.TextColor3 = theme.Accent
+            SectionText.TextSize = 14
+            SectionText.TextXAlignment = Enum.TextXAlignment.Left
+            SectionText.TextTransparency = 0
+
+            local textBounds = SectionText.TextBounds.X
+            local maxWidth = SectionFrame.AbsoluteSize.X - 10
+            if textBounds > maxWidth then
+                SectionText.Size = UDim2.new(0, textBounds, 1, 0)
+                local function slideText()
+                    if SectionText.Parent then
+                        TweenObject(SectionText, {Position = UDim2.new(0, -textBounds, 0, 0)}, 3)
+                        wait(3.5)
+                        SectionText.Position = UDim2.new(0, maxWidth, 0, 0)
+                        TweenObject(SectionText, {Position = UDim2.new(0, 0, 0, 0)}, 0.5)
+                        wait(1)
+                        if SectionText.Parent then
+                            spawn(slideText)
+                        end
+                    end
+                end
+                spawn(slideText)
+            else
+                SectionText.Size = UDim2.new(1, -10, 1, 0)
+            end
 
             local function UpdateSectionSize()
                 SectionFrame.Size = UDim2.new(1, 0, 0, SectionList.AbsoluteContentSize.Y + 25)
@@ -467,4 +461,4 @@ function SimpleUi.CreateLib(title, themeName)
     return TabsAPI
 end
 
-return SimpleUi
+return JeraldUi

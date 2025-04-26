@@ -1,0 +1,6 @@
+_G.auto = false
+
+while _G.auto do
+game:GetService("ReplicatedStorage").Packages.Knit.Services.OreService.RE.RequestRandomOre:FireServer()
+wait(0.4)
+end

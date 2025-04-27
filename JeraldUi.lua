@@ -66,7 +66,7 @@ local themes = {
     }
 }
 
-function JeraldUi:DraggingEnabled(frame, parent)
+function JeraldUi:DraggingEnabled(frame, parent, tabsAPI)
     parent = parent or frame
     local dragging = false
     local dragInput, mousePos, framePos
@@ -102,15 +102,12 @@ function JeraldUi:DraggingEnabled(frame, parent)
         if input == dragInput and dragging then
             local delta = input.Position - mousePos
             parent.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-            storedPosition = parent.Position -- Update storedPosition during drag
+            tabsAPI.storedPosition = parent.Position -- Update instance-specific storedPosition
         end
     end)
 end
 
-local uiName = tostring(math.random(1, 100)) .. tostring(math.random(1, 50))
-local storedPosition = UDim2.new(0.35, 0, 0.3, 0)
-
-function JeraldUi:ToggleUI()
+function JeraldUi:ToggleUI(uiName)
     if game.CoreGui[uiName].Enabled then
         game.CoreGui[uiName].Enabled = false
     else
@@ -122,6 +119,7 @@ function JeraldUi.CreateLib(title, themeName)
     title = title or "Jerald UI"
     themeName = themeName or "DarkTheme"
     local theme = themes[themeName] or themes.DarkTheme
+    local uiName = tostring(math.random(1, 100)) .. tostring(math.random(1, 50))
 
     local success, result = pcall(function()
         for _, v in pairs(game.CoreGui:GetChildren()) do
@@ -152,7 +150,7 @@ function JeraldUi.CreateLib(title, themeName)
         Main.Name = "Main"
         Main.Parent = ScreenGui
         Main.BackgroundColor3 = theme.Background
-        Main.Position = storedPosition
+        Main.Position = UDim2.new(0.35, 0, 0.3, 0)
         Main.Size = UDim2.new(0, 400, 0, 300)
         Main.ClipsDescendants = true
 
@@ -210,7 +208,6 @@ function JeraldUi.CreateLib(title, themeName)
         UnhideButton.Name = "UnhideButton"
         UnhideButton.Parent = ScreenGui
         UnhideButton.BackgroundColor3 = theme.Element
-        UnhideButton.Position = storedPosition
         UnhideButton.Size = UDim2.new(0, 30, 0, 30)
         UnhideButton.Font = Enum.Font.GothamBold
         UnhideButton.Text = "+"
@@ -221,25 +218,27 @@ function JeraldUi.CreateLib(title, themeName)
         UnhideCorner.CornerRadius = UDim.new(0, 4)
         UnhideCorner.Parent = UnhideButton
 
+        local TabsAPI = { storedPosition = Main.Position, ScreenGui = ScreenGui }
+
         HideButton.MouseButton1Click:Connect(function()
-            storedPosition = Main.Position
+            TabsAPI.storedPosition = Main.Position
             TweenObject(Main, {Size = UDim2.new(0, 0, 0, 0)}, 0.2)
             wait(0.2)
             Main.Visible = false
-            UnhideButton.Position = storedPosition
+            UnhideButton.Position = TabsAPI.storedPosition
             UnhideButton.Visible = true
         end)
 
         UnhideButton.MouseButton1Click:Connect(function()
-            Main.Position = storedPosition
+            Main.Position = TabsAPI.storedPosition
             Main.Visible = true
             TweenObject(Main, {Size = UDim2.new(0, 400, 0, 300)}, 0.2)
             UnhideButton.Visible = false
         end)
 
-        JeraldUi:DraggingEnabled(HideButton, Main)
-        JeraldUi:DraggingEnabled(UnhideButton, UnhideButton)
-        JeraldUi:DraggingEnabled(Header, Main)
+        JeraldUi:DraggingEnabled(Header, Main, TabsAPI)
+        JeraldUi:DraggingEnabled(HideButton, Main, TabsAPI)
+        JeraldUi:DraggingEnabled(UnhideButton, UnhideButton, TabsAPI)
 
         TabContainer.Name = "TabContainer"
         TabContainer.Parent = Main
@@ -276,8 +275,9 @@ function JeraldUi.CreateLib(title, themeName)
 
         TabList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateTabCanvasSize)
 
-        local TabsAPI = {}
-        local firstTab = true
+        function TabsAPI:ToggleUI()
+            JeraldUi:ToggleUI(uiName)
+        end
 
         function TabsAPI:NewTab(tabName)
             tabName = tabName or "Tab"
@@ -296,7 +296,7 @@ function JeraldUi.CreateLib(title, themeName)
             TabButton.TextColor3 = theme.Text
             TabButton.TextSize = 12
             TabButton.AutoButtonColor = false
-            TabButton.BackgroundTransparency = firstTab and 0 or 0.5
+            TabButton.BackgroundTransparency = TabsAPI.firstTab and 0 or 0.5
 
             local TabCorner = Instance.new("UICorner")
             TabCorner.CornerRadius = UDim.new(0, 4)
@@ -350,7 +350,7 @@ function JeraldUi.CreateLib(title, themeName)
             Page.CanvasSize = UDim2.new(0, 0, 0, 0)
             Page.ScrollBarThickness = 4
             Page.ScrollBarImageColor3 = theme.Accent
-            Page.Visible = firstTab
+            Page.Visible = TabsAPI.firstTab
 
             PageList.Name = "PageList"
             PageList.Parent = Page
@@ -378,8 +378,8 @@ function JeraldUi.CreateLib(title, themeName)
                 UpdateCanvasSize()
             end)
 
-            if firstTab then
-                firstTab = false
+            if TabsAPI.firstTab then
+                TabsAPI.firstTab = false
             end
 
             local SectionsAPI = {}
@@ -560,6 +560,7 @@ function JeraldUi.CreateLib(title, themeName)
             return SectionsAPI
         end
 
+        TabsAPI.firstTab = true
         return TabsAPI
     end)
 

@@ -1,15 +1,4 @@
---[[
-	github: https://github.com/LorekeeperZinnia/Dex
-	
-	New Dex
-	Final Version
-	Developed by Moon
-	Modified for Infinite Yield
-	
-	Dex is a debugging suite designed to help the user debug games and find any potential vulnerabilities.
-]]
-
-	
+-- certified skidder
 
 local cloneref = cloneref or (function(...) return ... end)
 local getnilinstances = getnilinstances or (function() return {} end)

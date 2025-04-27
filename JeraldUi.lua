@@ -102,6 +102,7 @@ function JeraldUi:DraggingEnabled(frame, parent)
         if input == dragInput and dragging then
             local delta = input.Position - mousePos
             parent.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+            storedPosition = parent.Position -- Update storedPosition during drag
         end
     end)
 end
@@ -223,6 +224,7 @@ function JeraldUi.CreateLib(title, themeName)
         HideButton.MouseButton1Click:Connect(function()
             storedPosition = Main.Position
             TweenObject(Main, {Size = UDim2.new(0, 0, 0, 0)}, 0.2)
+            wait(0.2)
             Main.Visible = false
             UnhideButton.Position = storedPosition
             UnhideButton.Visible = true
@@ -238,12 +240,6 @@ function JeraldUi.CreateLib(title, themeName)
         JeraldUi:DraggingEnabled(HideButton, Main)
         JeraldUi:DraggingEnabled(UnhideButton, UnhideButton)
         JeraldUi:DraggingEnabled(Header, Main)
-
-        Main:GetPropertyChangedSignal("Position"):Connect(function()
-            if Main.Visible then
-                storedPosition = Main.Position
-            end
-        end)
 
         TabContainer.Name = "TabContainer"
         TabContainer.Parent = Main
@@ -421,7 +417,7 @@ function JeraldUi.CreateLib(title, themeName)
                 SectionText.Text = sectionName
                 SectionText.TextColor3 = theme.Accent
                 SectionText.TextSize = 14
-                TextXAlignment = Enum.TextXAlignment.Left
+                SectionText.TextXAlignment = Enum.TextXAlignment.Left
                 SectionText.TextTransparency = 0
 
                 local textBounds = SectionText.TextBounds.X

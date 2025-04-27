@@ -66,7 +66,7 @@ local themes = {
     }
 }
 
-function JeraldUi:DraggingEnabled(frame, parent, tabsAPI)
+function JeraldUi:DraggingEnabled(frame, parent, tabsAPI, isUnhideButton)
     parent = parent or frame
     local dragging = false
     local dragInput, mousePos, framePos
@@ -102,7 +102,9 @@ function JeraldUi:DraggingEnabled(frame, parent, tabsAPI)
         if input == dragInput and dragging then
             local delta = input.Position - mousePos
             parent.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-            tabsAPI.storedPosition = parent.Position -- Update instance-specific storedPosition
+            if not isUnhideButton then
+                tabsAPI.storedPosition = parent.Position -- Only update storedPosition for main UI
+            end
         end
     end)
 end
@@ -210,6 +212,8 @@ function JeraldUi.CreateLib(title, themeName)
         UnhideButton.BackgroundColor3 = theme.Element
         UnhideButton.Size = UDim2.new(0, 30, 0, 30)
         UnhideButton.Font = Enum.Font.GothamBold
+
+
         UnhideButton.Text = "+"
         UnhideButton.TextColor3 = theme.Text
         UnhideButton.TextSize = 14
@@ -236,9 +240,9 @@ function JeraldUi.CreateLib(title, themeName)
             UnhideButton.Visible = false
         end)
 
-        JeraldUi:DraggingEnabled(Header, Main, TabsAPI)
-        JeraldUi:DraggingEnabled(HideButton, Main, TabsAPI)
-        JeraldUi:DraggingEnabled(UnhideButton, UnhideButton, TabsAPI)
+        JeraldUi:DraggingEnabled(Header, Main, TabsAPI, false)
+        JeraldUi:DraggingEnabled(HideButton, Main, TabsAPI, false)
+        JeraldUi:DraggingEnabled(UnhideButton, UnhideButton, TabsAPI, true)
 
         TabContainer.Name = "TabContainer"
         TabContainer.Parent = Main

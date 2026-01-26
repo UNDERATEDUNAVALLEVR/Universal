@@ -1,0 +1,19 @@
+_G.auto = true
+
+while _G.auto do
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local giverModel = workspace.Studs
+
+local giverPart = giverModel:FindFirstChildWhichIsA("BasePart", true)
+
+if giverPart then
+    firetouchinterest(hrp, giverPart, 0)
+    firetouchinterest(hrp, giverPart, 1)
+else
+    warn("Fak You")
+end
+wait(1)
+end

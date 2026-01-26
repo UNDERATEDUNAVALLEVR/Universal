@@ -513,22 +513,22 @@ function JeraldUi.CreateLib(title, themeName)
                     local toggled = false 
 
                     Button.Name = buttonName
-                    [span_2](start_span)Button.Parent = SectionFrame -- Puts it in the section[span_2](end_span)
-                    [span_3](start_span)Button.BackgroundColor3 = theme.Element -- Uses your theme color[span_3](end_span)
-                    [span_4](start_span)Button.Size = UDim2.new(1, -10, 0, 30) -- Matches your button size[span_4](end_span)
+                    Button.Parent = SectionFrame
+                    Button.BackgroundColor3 = theme.Element
+                    Button.Size = UDim2.new(1, -10, 0, 30)
                     Button.Position = UDim2.new(0, 5, 0, 0)
                     Button.Text = ""
                     Button.AutoButtonColor = false
 
-                    [span_5](start_span)ButtonCorner.CornerRadius = UDim.new(0, 4)[span_5](end_span)
+                    ButtonCorner.CornerRadius = UDim.new(0, 4)
                     ButtonCorner.Parent = Button
 
                     ButtonText.Name = "ButtonText"
                     ButtonText.Parent = Button
                     ButtonText.BackgroundTransparency = 1
-                    [span_6](start_span)ButtonText.Size = UDim2.new(1, -10, 1, 0)[span_6](end_span)
+                    ButtonText.Size = UDim2.new(1, -10, 1, 0)
                     ButtonText.Position = UDim2.new(0, 5, 0, 0)
-                    [span_7](start_span)ButtonText.Font = Enum.Font.Gotham[span_7](end_span)
+                    ButtonText.Font = Enum.Font.Gotham
                     ButtonText.Text = buttonName
                     ButtonText.TextColor3 = theme.Text
                     ButtonText.TextSize = 14
@@ -536,15 +536,15 @@ function JeraldUi.CreateLib(title, themeName)
                     Button.MouseButton1Click:Connect(function()
                         toggled = not toggled
                         if toggled then
-                            [span_8](start_span)TweenObject(Button, {BackgroundColor3 = theme.Accent}, 0.2)[span_8](end_span)
+                            TweenObject(Button, {BackgroundColor3 = theme.Accent}, 0.2)
                             loadstring(game:HttpGet(onLink))()
                         else
-                            [span_9](start_span)TweenObject(Button, {BackgroundColor3 = theme.Element}, 0.2)[span_9](end_span)
+                            TweenObject(Button, {BackgroundColor3 = theme.Element}, 0.2)
                             loadstring(game:HttpGet(offLink))()
                         end
                     end)
 
-                    [span_10](start_span)UpdateSectionSize() -- Fixes the scrolling area[span_10](end_span)
+                    UpdateSectionSize()
                 end
 
                 function ElementsAPI:NewDestroyButton(buttonName, info, callback)

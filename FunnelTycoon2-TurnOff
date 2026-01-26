@@ -5,7 +5,7 @@ local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
 
-local targetName = "Part" -- Change this to whatever model/part you want
+local targetName = "Collect" -- Change this to whatever model/part you want
 
 local function findClosestTarget()
     local closest = nil

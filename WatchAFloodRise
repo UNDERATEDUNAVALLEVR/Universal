@@ -1,16 +1,13 @@
 while wait() do
-local player = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
 
-local giverModel = workspace.Studs
+    local giverModel = workspace.Studs
+    local giverPart = giverModel:FindFirstChildWhichIsA("BasePart", true)
 
-local giverPart = giverModel:FindFirstChildWhichIsA("BasePart", true)
-
-if giverPart then
-    firetouchinterest(hrp, giverPart, 0)
-    firetouchinterest(hrp, giverPart, 1)
-else
-    warn("Fak You")
-end
+    if giverPart then
+        firetouchinterest(hrp, giverPart, 0)
+        firetouchinterest(hrp, giverPart, 1)
+    end
 end

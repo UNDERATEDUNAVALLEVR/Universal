@@ -1,6 +1,4 @@
-_G.auto = true
-
-while _G.auto do
+wait while() do
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
@@ -15,5 +13,4 @@ if giverPart then
 else
     warn("Fak You")
 end
-wait(1)
 end

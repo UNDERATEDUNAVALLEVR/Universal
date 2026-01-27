@@ -1,0 +1,52 @@
+_G.auto = true
+
+while _G.auto do
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local targetName = "Pad" -- Change this to whatever model/part you want
+
+local function findClosestTarget()
+    local closest = nil
+    local dist = math.huge
+    
+    -- Scan the whole game for anything named "Studs"
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj.Name == targetName then
+            -- Get the position of the object (or its first part)
+            local pos = obj:IsA("BasePart") and obj.Position or (obj:FindFirstChildWhichIsA("BasePart", true) and obj:FindFirstChildWhichIsA("BasePart", true).Position)
+            
+            if pos then
+                local magnitude = (hrp.Position - pos).Magnitude
+                if magnitude < dist then
+                    dist = magnitude
+                    closest = obj
+                end
+            end
+        end
+    end
+    return closest
+end
+
+local target = findClosestTarget()
+
+if target then
+    -- Touch the main object if it's a part
+    if target:IsA("BasePart") then
+        firetouchinterest(hrp, target, 0)
+        task.wait(0.01)
+        firetouchinterest(hrp, target, 1)
+    end
+    
+    -- Touch everything inside (Models/Folders)
+    for _, item in ipairs(target:GetDescendants()) do
+        if item:IsA("BasePart") then
+            firetouchinterest(hrp, item, 0)
+            task.wait(0.01)
+            firetouchinterest(hrp, item, 1)
+        end
+    end
+end
+wait(3)
+end

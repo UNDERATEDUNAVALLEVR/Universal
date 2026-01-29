@@ -1,0 +1,12 @@
+_G.auto = false
+
+while _G.auto do
+local args = {
+    [1] = "Bite",
+    [2] = game:GetService("Players").Weromentado_0.Character.Humanoid,
+    [3] = game:GetService("Players").Weromentado_0.Character.BiteHitbox
+}
+
+game:GetService("ReplicatedStorage").ServerEvents.Bite:FireServer(unpack(args))
+wait(0.4)
+end

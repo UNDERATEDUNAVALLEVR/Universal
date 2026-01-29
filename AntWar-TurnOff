@@ -1,31 +1,24 @@
-_G.auto = false
+_G.AuraEnabled = false -- Set this to false in your 'Off' script
 
-while _G.auto do
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
-local biteEvent = ReplicatedStorage.ServerEvents.Bite
-
-local maxDistance = 15 -- Adjust this for how far you want the aura to reach
-
-for _, player in ipairs(Players:GetPlayers()) do
-    -- Make sure we aren't biting ourselves and the player has a body
-    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local targetRoot = player.Character.HumanoidRootPart
-        local targetHumanoid = player.Character.Humanoid
+task.spawn(function()
+    while _G.AuraEnabled do
+        local lp = game:GetService("Players").LocalPlayer
+        local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         
-        -- Check distance between your character and the target
-        local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetRoot.Position).Magnitude
-        
-        if distance <= maxDistance then
-            local args = {
-                [1] = "Bite",
-                [2] = targetHumanoid,
-                [3] = targetRoot
-            }
-            biteEvent:FireServer(unpack(args))
+        if myRoot then
+            for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+                local char = player.Character
+                -- Check: Not us, different team, has parts
+                if player ~= lp and player.Team ~= lp.Team and char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
+                    local targetRoot = char.HumanoidRootPart
+                    local dist = (myRoot.Position - targetRoot.Position).Magnitude
+                    
+                    if dist <= 25 then
+                        game:GetService("ReplicatedStorage").ServerEvents.Bite:FireServer("Bite", char.Humanoid, targetRoot)
+                    end
+                end
+            end
         end
+        task.wait(0.4) -- Fast but not laggy
     end
-end
-wait(0.4)
-end
+end)

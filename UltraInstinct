@@ -1,0 +1,1023 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+
+local player = Players.LocalPlayer
+
+
+local instinctkey = Enum.KeyCode.F
+local instinctdetectdistance = 6
+local instinctoffset = 9
+local instincttime = 0.1
+local instinctcooldown = 0.6
+
+
+
+local leftdodge = "rbxassetid://29517689"
+local rightdodge = "rbxassetid://29517689"
+
+
+local instinctSounds = {
+	"rbxassetid://115523592797254",
+	"rbxassetid://106887649554725",
+	"rbxassetid://129561737395908",
+	"rbxassetid://75787837073401",
+
+}
+
+
+local dodgeEnabled = false
+local canDodge = true
+
+
+local character
+local humanoid
+local hrp
+local leftTrack
+local rightTrack
+local dodgeSounds = {}
+local currentSoundIndex = 1
+
+
+
+local function setupChar(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	hrp = char:WaitForChild("HumanoidRootPart")
+
+	canDodge = true
+
+
+	local leftAnim = Instance.new("Animation")
+	leftAnim.AnimationId = leftdodge
+
+	local rightAnim = Instance.new("Animation")
+	rightAnim.AnimationId = rightdodge
+
+	leftTrack = humanoid:LoadAnimation(leftAnim)
+	rightTrack = humanoid:LoadAnimation(rightAnim)
+
+
+
+	for _, s in ipairs(dodgeSounds) do
+		s:Destroy()
+	end
+	dodgeSounds = {}
+	currentSoundIndex = 1
+
+
+	for _, soundId in ipairs(instinctSounds) do
+		local sound = Instance.new("Sound")
+		sound.SoundId = soundId
+		sound.Volume = 1
+		sound.Parent = hrp
+		table.insert(dodgeSounds, sound)
+	end
+
+end
+
+
+if player.Character then
+	setupChar(player.Character)
+end
+
+
+player.CharacterAdded:Connect(setupChar)
+
+
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == instinctkey then
+		dodgeEnabled = not dodgeEnabled
+		warn("Dodge:", dodgeEnabled and "ON" or "OFF")
+	end
+end)
+
+
+local function createinstinctParticle(parent, props)
+	local emitter = Instance.new("ParticleEmitter")
+	for property, value in pairs(props) do
+		emitter[property] = value
+	end
+	emitter.Parent = parent
+	return emitter
+end
+
+
+local function emitDodgeVFX()
+	if not character then return end
+
+	local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+
+	local vfxAttachment = Instance.new("Attachment")
+	vfxAttachment.Parent = torso
+	vfxAttachment.Position = Vector3.new(0, 0, 0)
+
+
+
+	vfxAttachment.CFrame = CFrame.Angles(0, math.rad(90), 0)
+
+
+	vfxAttachment.CFrame = torso.CFrame:ToObjectSpace(CFrame.new(torso.Position))
+
+
+
+	local emitter2 = createinstinctParticle(vfxAttachment, {
+		Texture = "rbxassetid://12385813444",
+		Color = ColorSequence.new(Color3.fromRGB(0, 187, 255)),
+		Lifetime = NumberRange.new(0.2, 0.4),
+		Rate = 0,
+		Rotation = NumberRange.new(0, 360),
+		RotSpeed = NumberRange.new(0),
+		EmissionDirection = Enum.NormalId.Back,
+		Speed = NumberRange.new(0.00124006),
+		Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.1, 1.51474),
+			NumberSequenceKeypoint.new(0.2, 2.27743),
+			NumberSequenceKeypoint.new(0.3, 2.64229),
+			NumberSequenceKeypoint.new(0.4, 2.82439),
+			NumberSequenceKeypoint.new(0.5, 2.91763),
+			NumberSequenceKeypoint.new(0.6, 2.96482),
+			NumberSequenceKeypoint.new(0.7, 2.98735),
+			NumberSequenceKeypoint.new(0.8, 2.99675),
+			NumberSequenceKeypoint.new(0.9, 2.99964),
+			NumberSequenceKeypoint.new(1, 3),
+			NumberSequenceKeypoint.new(1, 3)
+		}),
+		LightEmission = 0,
+		Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+		SpreadAngle = Vector2.new(360, 360),
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+		Brightness = 10,
+		ZOffset = 0,
+		Squash = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.512055, 0.7375),
+			NumberSequenceKeypoint.new(1, 1)
+		}),
+		FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+		FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+		VelocityInheritance = 0,
+		LockedToPart = true,
+		Enabled = false
+	})
+	emitter2:Emit(1)
+
+
+
+	local emitter3 = createinstinctParticle(vfxAttachment, {
+		Texture = "rbxassetid://13712007548",
+		Color = ColorSequence.new(Color3.fromRGB(164, 220, 255)),
+		Lifetime = NumberRange.new(0.2, 0.4),
+		Rate = 0,
+		Rotation = NumberRange.new(0, 360),
+		RotSpeed = NumberRange.new(0),
+		EmissionDirection = Enum.NormalId.Back,
+		Speed = NumberRange.new(0.00124006),
+		Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.1, 1.51474),
+			NumberSequenceKeypoint.new(0.2, 2.27743),
+			NumberSequenceKeypoint.new(0.3, 2.64229),
+			NumberSequenceKeypoint.new(0.4, 2.82439),
+			NumberSequenceKeypoint.new(0.5, 2.91763),
+			NumberSequenceKeypoint.new(0.6, 2.96482),
+			NumberSequenceKeypoint.new(0.7, 2.98735),
+			NumberSequenceKeypoint.new(0.8, 2.99675),
+			NumberSequenceKeypoint.new(0.9, 2.99964),
+			NumberSequenceKeypoint.new(1, 3),
+			NumberSequenceKeypoint.new(1, 3)
+		}),
+		LightEmission = 0,
+		Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+		SpreadAngle = Vector2.new(360, 360),
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+		Brightness = 10,
+		ZOffset = 0,
+		Squash = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.5),
+			NumberSequenceKeypoint.new(1, 0.5)
+		}),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.504018, 0.4),
+			NumberSequenceKeypoint.new(1, 1)
+		}),
+		FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+		FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+		VelocityInheritance = 0,
+		LockedToPart = true,
+		Enabled = false
+	})
+	emitter3:Emit(1)
+
+
+
+	local emitter4 = createinstinctParticle(vfxAttachment, {
+		Texture = "rbxassetid://8494150181",
+		Color = ColorSequence.new(Color3.fromRGB(96, 216, 253)),
+		Lifetime = NumberRange.new(0.2),
+		Rate = 0,
+		Rotation = NumberRange.new(30),
+		RotSpeed = NumberRange.new(400),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(0.00135),
+		Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.1, 2.01965),
+			NumberSequenceKeypoint.new(0.2, 3.03657),
+			NumberSequenceKeypoint.new(0.3, 3.52305),
+			NumberSequenceKeypoint.new(0.4, 3.76585),
+			NumberSequenceKeypoint.new(0.5, 3.89017),
+			NumberSequenceKeypoint.new(0.6, 3.9531),
+			NumberSequenceKeypoint.new(0.7, 3.98314),
+			NumberSequenceKeypoint.new(0.8, 3.99567),
+			NumberSequenceKeypoint.new(0.9, 3.99952),
+			NumberSequenceKeypoint.new(1, 4),
+			NumberSequenceKeypoint.new(1, 4)
+		}),
+		LightEmission = 0,
+		Orientation = Enum.ParticleOrientation.FacingCamera,
+		SpreadAngle = Vector2.new(0, 0),
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+		Brightness = 4,
+		ZOffset = 0,
+		Squash = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.464983, 0.41875),
+			NumberSequenceKeypoint.new(1, 1)
+		}),
+		FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+		FlipbookMode = Enum.ParticleFlipbookMode.Loop,
+		VelocityInheritance = 0,
+		LockedToPart = true,
+		Enabled = false
+	})
+	emitter4:Emit(1)
+
+
+	local emitter5 = createinstinctParticle(vfxAttachment, {
+		Texture = "rbxassetid://16822259518",
+		Color = ColorSequence.new(Color3.fromRGB(164, 238, 255)),
+		Lifetime = NumberRange.new(0.2, 0.4),
+		Rate = 0,
+		Rotation = NumberRange.new(0, 400),
+		RotSpeed = NumberRange.new(-100, 100),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(0.1),
+		Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.1, 1.51474),
+			NumberSequenceKeypoint.new(0.2, 2.27743),
+			NumberSequenceKeypoint.new(0.3, 2.64229),
+			NumberSequenceKeypoint.new(0.4, 2.82439),
+			NumberSequenceKeypoint.new(0.5, 2.91763),
+			NumberSequenceKeypoint.new(0.6, 2.96482),
+			NumberSequenceKeypoint.new(0.7, 2.98735),
+			NumberSequenceKeypoint.new(0.8, 2.99675),
+			NumberSequenceKeypoint.new(0.9, 2.99964),
+			NumberSequenceKeypoint.new(1, 3),
+			NumberSequenceKeypoint.new(1, 3)
+		}),
+		LightEmission = 0,
+		Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+		SpreadAngle = Vector2.new(360, 360),
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+		Brightness = 5,
+		ZOffset = 0,
+		Squash = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 1)
+		}),
+		FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+		FlipbookMode = Enum.ParticleFlipbookMode.Random,
+		VelocityInheritance = 0,
+		LockedToPart = true,
+		Enabled = false
+	})
+	emitter5:Emit(1)
+
+
+	local emitter6 = createinstinctParticle(vfxAttachment, {
+		Texture = "http://www.roblox.com/asset/?id=12800351103",
+		Color = ColorSequence.new(Color3.fromRGB(146, 230, 255)),
+		Lifetime = NumberRange.new(0.15, 0.2),
+		Rate = 0,
+		Rotation = NumberRange.new(-360, 360),
+		RotSpeed = NumberRange.new(0),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(0.001),
+		Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 4.65798),
+			NumberSequenceKeypoint.new(0.585366, 0),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		LightEmission = 1,
+		Orientation = Enum.ParticleOrientation.FacingCamera,
+		SpreadAngle = Vector2.new(0, 0),
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+		Brightness = 5,
+		ZOffset = 1,
+		Squash = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		FlipbookLayout = Enum.ParticleFlipbookLayout.Grid2x2,
+		FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+		VelocityInheritance = 0,
+		LockedToPart = true,
+		Enabled = false
+	})
+	emitter6:Emit(1)
+
+
+
+
+	local emitter8 = createinstinctParticle(vfxAttachment, {
+		Texture = "rbxassetid://8700410994",
+		Color = ColorSequence.new(Color3.fromRGB(176, 217, 255)),
+		Lifetime = NumberRange.new(0.2, 0.4),
+		Rate = 0,
+		Rotation = NumberRange.new(-360, 360),
+		RotSpeed = NumberRange.new(-30, 30),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(0.01),
+		Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.225, 4),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		LightEmission = 0,
+		Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+		SpreadAngle = Vector2.new(-360, 360),
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+		Brightness = 5,
+		ZOffset = -1,
+		Squash = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, -2),
+			NumberSequenceKeypoint.new(1, 3)
+		}),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.5, 0.3125),
+			NumberSequenceKeypoint.new(1, 1)
+		}),
+		FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+		FlipbookMode = Enum.ParticleFlipbookMode.Loop,
+		VelocityInheritance = 0,
+		LockedToPart = true,
+		Enabled = false
+	})
+	emitter8:Emit(1)
+
+
+
+	local emitter9 = createinstinctParticle(vfxAttachment, {
+		Texture = "http://www.roblox.com/asset/?id=9499725747",
+		Color = ColorSequence.new(Color3.fromRGB(151, 245, 255)),
+		Lifetime = NumberRange.new(0.5),
+		Rate = 0,
+		Rotation = NumberRange.new(0, 360),
+		RotSpeed = NumberRange.new(0),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(20, 45),
+		Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.189702, 0.260587),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		LightEmission = 3,
+		Orientation = Enum.ParticleOrientation.FacingCamera,
+		SpreadAngle = Vector2.new(360, 360),
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+		Brightness = 5,
+		ZOffset = 0,
+		Squash = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 0)
+		}),
+		FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4,
+		FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+		VelocityInheritance = 0,
+		LockedToPart = true,
+		Enabled = false
+	})
+	emitter9:Emit(1)
+
+
+
+
+	task.delay(2, function()
+		if vfxAttachment then vfxAttachment:Destroy() end
+	end)
+end
+
+local function forceFaceDirection(directionVector, duration)
+	if not humanoid or not hrp then return end
+
+
+	humanoid.AutoRotate = false
+
+
+	local lookDir = Vector3.new(directionVector.X, 0, directionVector.Z).Unit
+	if lookDir.Magnitude == 0 then return end
+
+
+	hrp.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + lookDir)
+
+	task.delay(duration, function()
+		if humanoid then
+			humanoid.AutoRotate = true
+		end
+	end)
+end
+
+local lastDodgeDirection = 1
+
+local function dodge()
+	if not canDodge or not humanoid or humanoid.Health <= 0 then return end
+	canDodge = false
+
+	emitDodgeVFX()
+
+	local direction = -lastDodgeDirection
+	lastDodgeDirection = direction
+
+	local offset = hrp.CFrame.RightVector * instinctoffset * direction
+	local targetCFrame = hrp.CFrame + offset
+
+	local track = direction == -1 and leftTrack or rightTrack
+	if track then
+		track:Play()
+	end
+
+	local sound = dodgeSounds[currentSoundIndex]
+	if sound then
+		sound:Play()
+
+		currentSoundIndex += 1
+		if currentSoundIndex > #dodgeSounds then
+			currentSoundIndex = 1
+		end
+	end
+
+	local dodgeTween = TweenService:Create(
+		hrp,
+		TweenInfo.new(instincttime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ CFrame = targetCFrame }
+	)
+	dodgeTween:Play()
+
+
+	task.delay(instincttime, function()
+		if humanoid and hrp then
+			local dodgeVector = hrp.CFrame.RightVector * direction
+			forceFaceDirection(-dodgeVector, 0.3)
+
+
+			if track and track.IsPlaying then
+				track:Stop(0)
+			end
+		end
+	end)
+
+	task.delay(instinctcooldown, function()
+		canDodge = true
+	end)
+end
+
+
+
+
+
+local partPreviousPositions = {}
+
+RunService.Heartbeat:Connect(function(deltaTime)
+	if not dodgeEnabled or not character or not hrp then return end
+
+	local region = Region3.new(
+		hrp.Position - Vector3.new(instinctdetectdistance, instinctdetectdistance, instinctdetectdistance),
+		hrp.Position + Vector3.new(instinctdetectdistance, instinctdetectdistance, instinctdetectdistance)
+	)
+
+	local parts = workspace:FindPartsInRegion3(region, character, math.huge)
+
+	for _, part in ipairs(parts) do
+		local prevPos = partPreviousPositions[part]
+		local velocity = 0
+
+		if prevPos then
+
+			local distance = (part.Position - prevPos).Magnitude
+			velocity = distance / deltaTime
+		end
+
+
+		partPreviousPositions[part] = part.Position
+
+
+		if velocity >= 9 then
+			dodge()
+			break
+		end
+	end
+end)
+
+
+
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+player.CharacterAdded:Connect(function(newChar)
+	character = newChar
+end)
+
+local function createinstinctParticle2(parent, props)
+	local emitter = Instance.new("ParticleEmitter")
+	for property, value in pairs(props) do
+		emitter[property] = value
+	end
+	emitter.Parent = parent
+	return emitter
+end
+
+local function EmitVFX(character)
+	if not character then return end
+
+
+	local bodyParts = {}
+	for _, part in pairs(character:GetDescendants()) do
+		if part:IsA("BasePart") then
+			table.insert(bodyParts, part)
+		end
+	end
+
+	for _, part in pairs(bodyParts) do
+		local emitter1 = createinstinctParticle2(part, {
+			Texture = "http://www.roblox.com/asset/?id=11534281007",
+			Color = ColorSequence.new(Color3.fromRGB(48, 93, 255)),
+			Lifetime = NumberRange.new(1),
+			Rate = 0,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-50, 50),
+			EmissionDirection = Enum.NormalId.Top,
+			Speed = NumberRange.new(0.5),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(0.0951374, 0.0555551),
+				NumberSequenceKeypoint.new(1, 0)
+			}),
+			LightEmission = 0.25,
+			Orientation = Enum.ParticleOrientation.VelocityParallel,
+			SpreadAngle = Vector2.new(-360, 360),
+			Shape = Enum.ParticleEmitterShape.Box,
+			ShapeInOut = Enum.ParticleEmitterShapeInOut.Inward,
+			Brightness = 15,
+			ZOffset = -1.5,
+			Squash = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 0)
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.499471, 0.010929),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4,
+			FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+			VelocityInheritance = 0,
+			LockedToPart = true,
+			Enabled = true
+		})
+		emitter1:Emit(1)
+
+		local emitter2 = createinstinctParticle2( part, {
+			Texture = "rbxassetid://12362600879",
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(222, 166, 255)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(111, 142, 255))
+			}),
+			Lifetime = NumberRange.new(1),
+			Rate = 0,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-500, 500),
+			EmissionDirection = Enum.NormalId.Top,
+			Speed = NumberRange.new(0.5),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(0.096, 0.75),
+				NumberSequenceKeypoint.new(1, 0)
+			}),
+			LightEmission = 0.25,
+			Orientation = Enum.ParticleOrientation.VelocityParallel,
+			SpreadAngle = Vector2.new(-360, 360),
+			Shape = Enum.ParticleEmitterShape.Box,
+			ShapeInOut = Enum.ParticleEmitterShapeInOut.Inward,
+			Brightness = 1,
+			ZOffset = -1.5,
+			Squash = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 0)
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.097479, 0.748634),
+				NumberSequenceKeypoint.new(0.598319, 0.912568),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+			FlipbookMode = Enum.ParticleFlipbookMode.Loop,
+			VelocityInheritance = 0,
+			LockedToPart = true,
+			Enabled = true
+		})
+		emitter2: Emit(1)
+
+		local emitter3 = createinstinctParticle2( part, {
+			Texture = "rbxassetid://10205180639",
+			Color = ColorSequence.new(Color3.fromRGB(173, 101, 255)),
+			Lifetime = NumberRange.new(1),
+			Rate = 0,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-50, 50),
+			EmissionDirection = Enum.NormalId.Top,
+			Speed = NumberRange.new(0.75),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(0.0930233, 0.388889),
+				NumberSequenceKeypoint.new(1, 0)
+			}),
+			LightEmission = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			SpreadAngle = Vector2.new(-360, 360),
+			Shape = Enum.ParticleEmitterShape.Box,
+			ShapeInOut = Enum.ParticleEmitterShapeInOut.InAndOut,
+			Brightness = 1,
+			ZOffset = -1,
+			Squash = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 0)
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.500529, 0),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+			FlipbookMode = Enum.ParticleFlipbookMode.Loop,
+			VelocityInheritance = 0,
+			LockedToPart = true,
+			Enabled = true
+		})
+		emitter3: Emit(1)
+
+		local emitter4 = createinstinctParticle2( part, {
+			Texture = "rbxassetid://17783339551",
+			Color = ColorSequence.new(Color3.fromRGB(135, 105, 255)),
+			Lifetime = NumberRange.new(4),
+			Rate = 0,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-15, 15),
+			EmissionDirection = Enum.NormalId.Front,
+			Speed = NumberRange.new(0.001),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 2),
+				NumberSequenceKeypoint.new(0.1, 1.67885),
+				NumberSequenceKeypoint.new(0.2, 1.37565),
+				NumberSequenceKeypoint.new(0.3, 1.09247),
+				NumberSequenceKeypoint.new(0.4, 0.83188),
+				NumberSequenceKeypoint.new(0.5, 0.597074),
+				NumberSequenceKeypoint.new(0.6, 0.392151),
+				NumberSequenceKeypoint.new(0.7, 0.22248),
+				NumberSequenceKeypoint.new(0.8, 0.0952009),
+				NumberSequenceKeypoint.new(0.9, 0.0194166),
+				NumberSequenceKeypoint.new(1, 0),
+				NumberSequenceKeypoint.new(1, 0)
+			}),
+			LightEmission = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			SpreadAngle = Vector2.new(180, 180),
+			Shape = Enum.ParticleEmitterShape.Box,
+			ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+			Brightness = 0.009999999776482582,
+			ZOffset = 0.800000011920929,
+			Squash = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.2),
+				NumberSequenceKeypoint.new(1, 0.2)
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.1, 0.202798),
+				NumberSequenceKeypoint.new(0.2, 0.211875),
+				NumberSequenceKeypoint.new(0.3, 0.227544),
+				NumberSequenceKeypoint.new(0.4, 0.250668),
+				NumberSequenceKeypoint.new(0.5, 0.282744),
+				NumberSequenceKeypoint.new(0.6, 0.326222),
+				NumberSequenceKeypoint.new(0.7, 0.385343),
+				NumberSequenceKeypoint.new(0.8, 0.468469),
+				NumberSequenceKeypoint.new(0.9, 0.597283),
+				NumberSequenceKeypoint.new(1, 0.99974),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4,
+			FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+			VelocityInheritance = 0,
+			LockedToPart = true,
+			Enabled = true
+		})
+		emitter4: Emit(1)
+
+		local emitter5 = createinstinctParticle2( part, {
+			Texture = "rbxassetid://16867563190",
+			Color = ColorSequence.new(Color3.fromRGB(135, 105, 255)),
+			Lifetime = NumberRange.new(5, 6),
+			Rate = 0,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-15, 15),
+			EmissionDirection = Enum.NormalId.Front,
+			Speed = NumberRange.new(0.001),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.5),
+				NumberSequenceKeypoint.new(0.1, 0.580287),
+				NumberSequenceKeypoint.new(0.2, 0.656088),
+				NumberSequenceKeypoint.new(0.3, 0.726882),
+				NumberSequenceKeypoint.new(0.4, 0.79203),
+				NumberSequenceKeypoint.new(0.5, 0.850732),
+				NumberSequenceKeypoint.new(0.6, 0.901962),
+				NumberSequenceKeypoint.new(0.7, 0.94438),
+				NumberSequenceKeypoint.new(0.8, 0.9762),
+				NumberSequenceKeypoint.new(0.9, 0.995146),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			LightEmission = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			SpreadAngle = Vector2.new(180, 180),
+			Shape = Enum.ParticleEmitterShape.Box,
+			ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+			Brightness = 0.009999999776482582,
+			ZOffset = 0.800000011920929,
+			Squash = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.2),
+				NumberSequenceKeypoint.new(1, 0.2)
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.126321, 0.4375),
+				NumberSequenceKeypoint.new(0.2, 0.211875),
+				NumberSequenceKeypoint.new(0.3, 0.227544),
+				NumberSequenceKeypoint.new(0.4, 0.250668),
+				NumberSequenceKeypoint.new(0.5, 0.282744),
+				NumberSequenceKeypoint.new(0.6, 0.326222),
+				NumberSequenceKeypoint.new(0.7, 0.385343),
+				NumberSequenceKeypoint.new(0.8, 0.468469),
+				NumberSequenceKeypoint.new(0.9, 0.597283),
+				NumberSequenceKeypoint.new(1, 0.99974),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4,
+			FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+			VelocityInheritance = 0,
+			LockedToPart = true,
+			Enabled = true
+		})
+		emitter5: Emit(1)
+
+		local emitter6 = createinstinctParticle2( part, {
+			Texture = "rbxassetid://16843373901",
+			Color = ColorSequence.new(Color3.fromRGB(107, 154, 255)),
+			Lifetime = NumberRange.new(2.5, 3),
+			Rate = 0,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(0),
+			EmissionDirection = Enum.NormalId.Top,
+			Speed = NumberRange.new(0.001),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(0.1, 0.160575),
+				NumberSequenceKeypoint.new(0.2, 0.312176),
+				NumberSequenceKeypoint.new(0.3, 0.453764),
+				NumberSequenceKeypoint.new(0.4, 0.58406),
+				NumberSequenceKeypoint.new(0.5, 0.701463),
+				NumberSequenceKeypoint.new(0.6, 0.803924),
+				NumberSequenceKeypoint.new(0.7, 0.88876),
+				NumberSequenceKeypoint.new(0.8, 0.9524),
+				NumberSequenceKeypoint.new(0.9, 0.990292),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			LightEmission = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			SpreadAngle = Vector2.new(25, 25),
+			Shape = Enum.ParticleEmitterShape.Box,
+			ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+			Brightness = 0.10000000149011612,
+			ZOffset = -1.2000000476837158,
+			Squash = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 0)
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(0.1, 0.00349718),
+				NumberSequenceKeypoint.new(0.2, 0.0148441),
+				NumberSequenceKeypoint.new(0.3, 0.03443),
+				NumberSequenceKeypoint.new(0.4, 0.0633354),
+				NumberSequenceKeypoint.new(0.5, 0.10343),
+				NumberSequenceKeypoint.new(0.6, 0.157778),
+				NumberSequenceKeypoint.new(0.7, 0.231678),
+				NumberSequenceKeypoint.new(0.8, 0.335586),
+				NumberSequenceKeypoint.new(0.9, 0.496603),
+				NumberSequenceKeypoint.new(1, 0.999674),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4,
+			FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+			VelocityInheritance = 0,
+			LockedToPart = true,
+			Enabled = true
+		})
+		emitter6: Emit(1)
+
+		local emitter7 = createinstinctParticle2( part, {
+			Texture = "rbxassetid://16846725471",
+			Color = ColorSequence.new(Color3.fromRGB(44, 118, 255)),
+			Lifetime = NumberRange.new(1.5, 2.5),
+			Rate = 0,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-15, 15),
+			EmissionDirection = Enum.NormalId.Top,
+			Speed = NumberRange.new(0.001),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.1, 1.1124),
+				NumberSequenceKeypoint.new(0.2, 1.21852),
+				NumberSequenceKeypoint.new(0.3, 1.31763),
+				NumberSequenceKeypoint.new(0.4, 1.40884),
+				NumberSequenceKeypoint.new(0.5, 1.49102),
+				NumberSequenceKeypoint.new(0.6, 1.56275),
+				NumberSequenceKeypoint.new(0.7, 1.62213),
+				NumberSequenceKeypoint.new(0.8, 1.66668),
+				NumberSequenceKeypoint.new(0.9, 1.6932),
+				NumberSequenceKeypoint.new(1, 1.7),
+				NumberSequenceKeypoint.new(1, 1.7)
+			}),
+			LightEmission = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			SpreadAngle = Vector2.new(25, 25),
+			Shape = Enum.ParticleEmitterShape.Box,
+			ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+			Brightness = 0.10000000149011612,
+			ZOffset = -1,
+			Squash = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.1),
+				NumberSequenceKeypoint.new(1, 0.1)
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.103066, 0.75625),
+				NumberSequenceKeypoint.new(0.2, 0.0148441),
+				NumberSequenceKeypoint.new(0.3, 0.03443),
+				NumberSequenceKeypoint.new(0.4, 0.0633354),
+				NumberSequenceKeypoint.new(0.5, 0.10343),
+				NumberSequenceKeypoint.new(0.6, 0.157778),
+				NumberSequenceKeypoint.new(0.7, 0.231678),
+				NumberSequenceKeypoint.new(0.8, 0.335586),
+				NumberSequenceKeypoint.new(0.9, 0.496603),
+				NumberSequenceKeypoint.new(1, 0.999674),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4,
+			FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+			VelocityInheritance = 0,
+			LockedToPart = true,
+			Enabled = true
+		})
+		emitter7:Emit(1)
+
+		local emitter8 = createinstinctParticle2(part, {
+			Texture = "rbxassetid://16846725471",
+			Color = ColorSequence.new(Color3.fromRGB(137, 34, 255)),
+			Lifetime = NumberRange.new(1.5, 2.5),
+			Rate = 0,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-15, 15),
+			EmissionDirection = Enum.NormalId.Top,
+			Speed = NumberRange.new(0.001),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.1, 1.1124),
+				NumberSequenceKeypoint.new(0.2, 1.21852),
+				NumberSequenceKeypoint.new(0.3, 1.31763),
+				NumberSequenceKeypoint.new(0.4, 1.40884),
+				NumberSequenceKeypoint.new(0.5, 1.49102),
+				NumberSequenceKeypoint.new(0.6, 1.56275),
+				NumberSequenceKeypoint.new(0.7, 1.62213),
+				NumberSequenceKeypoint.new(0.8, 1.66668),
+				NumberSequenceKeypoint.new(0.9, 1.6932),
+				NumberSequenceKeypoint.new(1, 1.7),
+				NumberSequenceKeypoint.new(1, 1.7)
+			}),
+			LightEmission = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			SpreadAngle = Vector2.new(25, 25),
+			Shape = Enum.ParticleEmitterShape.Box,
+			ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+			Brightness = 0.10000000149011612,
+			ZOffset = -1,
+			Squash = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.1),
+				NumberSequenceKeypoint.new(1, 0.1)
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.103066, 0.75625),
+				NumberSequenceKeypoint.new(0.2, 0.0148441),
+				NumberSequenceKeypoint.new(0.3, 0.03443),
+				NumberSequenceKeypoint.new(0.4, 0.0633354),
+				NumberSequenceKeypoint.new(0.5, 0.10343),
+				NumberSequenceKeypoint.new(0.6, 0.157778),
+				NumberSequenceKeypoint.new(0.7, 0.231678),
+				NumberSequenceKeypoint.new(0.8, 0.335586),
+				NumberSequenceKeypoint.new(0.9, 0.496603),
+				NumberSequenceKeypoint.new(1, 0.999674),
+				NumberSequenceKeypoint.new(1, 1)
+			}),
+			FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4,
+			FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+			VelocityInheritance = 0,
+			LockedToPart = true,
+			Enabled = true
+		})
+		emitter8:Emit(1)
+	end
+end
+
+
+RunService.RenderStepped:Connect(function()
+	if character and character.Parent then
+		EmitVFX(character)
+	end
+end)
+
+
+while true do
+	if character and character.Parent then
+		for _, part in pairs(character:GetDescendants()) do
+			if part:IsA("BasePart") then
+				for _, emitter in pairs(part:GetChildren()) do
+					if emitter:IsA("ParticleEmitter") then
+
+						emitter.Enabled = false
+
+
+
+						local originalLifetime = emitter.Lifetime
+						emitter.Lifetime = NumberRange.new(0.5)
+
+
+						task.delay(0.5, function()
+							if emitter.Parent then
+								emitter:Destroy()
+							end
+						end)
+					end
+				end
+			end
+		end
+	end
+	task.wait(0.5)
+end

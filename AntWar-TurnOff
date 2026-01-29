@@ -1,12 +1,31 @@
 _G.auto = false
 
 while _G.auto do
-local args = {
-    [1] = "Bite",
-    [2] = game:GetService("Players").Weromentado_0.Character.Humanoid,
-    [3] = game:GetService("Players").Weromentado_0.Character.BiteHitbox
-}
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local biteEvent = ReplicatedStorage.ServerEvents.Bite
 
-game:GetService("ReplicatedStorage").ServerEvents.Bite:FireServer(unpack(args))
+local maxDistance = 15 -- Adjust this for how far you want the aura to reach
+
+for _, player in ipairs(Players:GetPlayers()) do
+    -- Make sure we aren't biting ourselves and the player has a body
+    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local targetRoot = player.Character.HumanoidRootPart
+        local targetHumanoid = player.Character.Humanoid
+        
+        -- Check distance between your character and the target
+        local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetRoot.Position).Magnitude
+        
+        if distance <= maxDistance then
+            local args = {
+                [1] = "Bite",
+                [2] = targetHumanoid,
+                [3] = targetRoot
+            }
+            biteEvent:FireServer(unpack(args))
+        end
+    end
+end
 wait(0.4)
 end

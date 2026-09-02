@@ -38,7 +38,7 @@ end)
 
 local MainTab = Window:Tab("Hitbox","rbxassetid://10888331510")
 
-MainTab:InfoLabel("Rebel-Safe Target System")
+MainTab:InfoLabel("Simple Hitbox Expander")
 
 MainTab:Section("Controls")
 

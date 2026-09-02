@@ -1,5 +1,7 @@
 local main = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
+local FrameCorner = Instance.new("UICorner")
+
 local up = Instance.new("TextButton")
 local down = Instance.new("TextButton")
 local forward = Instance.new("TextButton")
@@ -14,186 +16,179 @@ local mine = Instance.new("TextButton")
 local closebutton = Instance.new("TextButton")
 local mini = Instance.new("TextButton")
 local mini2 = Instance.new("TextButton")
+local feedback = Instance.new("TextButton")
 
+-- Setup UI Base
 main.Name = "main"
 main.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 main.ResetOnSpawn = false
 
 Frame.Parent = main
-Frame.BackgroundColor3 = Color3.fromRGB(26, 26, 26) -- Deep charcoal
-Frame.BorderColor3 = Color3.fromRGB(51, 51, 51) -- Dark gray
+Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- Darker base background
+Frame.BorderColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.100320168, 0, 0.379746825, 0)
 Frame.Size = UDim2.new(0, 190, 0, 57)
+Frame.Active = true
+Frame.Draggable = true
 
+FrameCorner.CornerRadius = UDim.new(0, 6)
+FrameCorner.Parent = Frame
+
+-- Function to apply consistent dark styling and rounded corners
+local function styleButton(btn, text, bgColor, txtColor)
+	btn.BackgroundColor3 = bgColor or Color3.fromRGB(28, 28, 28)
+	btn.TextColor3 = txtColor or Color3.fromRGB(215, 215, 215)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.Text = text
+	btn.BorderSizePixel = 0
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = btn
+end
+
+-- Styling Controls
+styleButton(up, "UP", Color3.fromRGB(25, 25, 25))
 up.Name = "up"
 up.Parent = Frame
-up.BackgroundColor3 = Color3.fromRGB(42, 42, 42) -- Dark gray
 up.Size = UDim2.new(0, 44, 0, 28)
-up.Font = Enum.Font.SourceSans
-up.Text = "UP"
-up.TextColor3 = Color3.fromRGB(224, 224, 224) -- Light gray
 up.TextSize = 14.000
 
+styleButton(down, "DOWN", Color3.fromRGB(25, 25, 25))
 down.Name = "down"
 down.Parent = Frame
-down.BackgroundColor3 = Color3.fromRGB(47, 47, 47)
 down.Position = UDim2.new(0, 0, 0.491228074, 0)
 down.Size = UDim2.new(0, 44, 0, 28)
-down.Font = Enum.Font.SourceSans
-down.Text = "DOWN"
-down.TextColor3 = Color3.fromRGB(224, 224, 224)
 down.TextSize = 14.000
 
+styleButton(forward, "FORWARD", Color3.fromRGB(25, 25, 25))
 forward.Name = "forward"
 forward.Parent = Frame
-forward.BackgroundColor3 = Color3.fromRGB(53, 53, 53)
 forward.Position = UDim2.new(0, 0, 0.991228074, 0)
 forward.Size = UDim2.new(0, 50, 0, 28)
-forward.Font = Enum.Font.SourceSans
-forward.Text = "FORWARD"
-forward.TextColor3 = Color3.fromRGB(224, 224, 224)
-forward.TextSize = 14.000
+forward.TextSize = 12.000
 
+styleButton(backward, "BACKWARD", Color3.fromRGB(25, 25, 25))
 backward.Name = "backward"
 backward.Parent = Frame
-backward.BackgroundColor3 = Color3.fromRGB(58, 58, 58)
 backward.Position = UDim2.new(0, 0, 1.491228074, 0)
 backward.Size = UDim2.new(0, 50, 0, 28)
-backward.Font = Enum.Font.SourceSans
-backward.Text = "BACKWORD" -- Note: Typo retained; consider changing to "BACKWARD"
-backward.TextColor3 = Color3.fromRGB(224, 224, 224)
-backward.TextSize = 14.000
+backward.TextSize = 11.000
 
+styleButton(left, "LEFT", Color3.fromRGB(25, 25, 25))
 left.Name = "left"
 left.Parent = Frame
-left.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
 left.Position = UDim2.new(-0.271578946, 0, 0.991228074, 0)
 left.Size = UDim2.new(0, 50, 0, 28)
-left.Font = Enum.Font.SourceSans
-left.Text = "LEFT"
-left.TextColor3 = Color3.fromRGB(224, 224, 224)
-left.TextSize = 14.000
+left.TextSize = 12.000
 
+styleButton(right, "RIGHT", Color3.fromRGB(25, 25, 25))
 right.Name = "right"
 right.Parent = Frame
-right.BackgroundColor3 = Color3.fromRGB(69, 69, 69)
 right.Position = UDim2.new(0.271578946, 0, 0.991228074, 0)
 right.Size = UDim2.new(0, 50, 0, 28)
-right.Font = Enum.Font.SourceSans
-right.Text = "RIGHT"
-right.TextColor3 = Color3.fromRGB(224, 224, 224)
-right.TextSize = 14.000
+right.TextSize = 12.000
 
+styleButton(onof, "fly", Color3.fromRGB(75, 45, 180), Color3.fromRGB(255, 255, 255))
 onof.Name = "onof"
 onof.Parent = Frame
-onof.BackgroundColor3 = Color3.fromRGB(107, 78, 255) -- Vibrant purple
 onof.Position = UDim2.new(0.702823281, 0, 0.491228074, 0)
 onof.Size = UDim2.new(0, 56, 0, 28)
-onof.Font = Enum.Font.SourceSans
-onof.Text = "fly"
-onof.TextColor3 = Color3.fromRGB(255, 255, 255) -- White
 onof.TextSize = 14.000
 
 TextLabel.Parent = Frame
-TextLabel.BackgroundColor3 = Color3.fromRGB(37, 37, 38) -- Slightly lighter dark
+TextLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 TextLabel.Position = UDim2.new(0.469327301, 0, 0, 0)
 TextLabel.Size = UDim2.new(0, 100, 0, 28)
-TextLabel.Font = Enum.Font.SourceSans
+TextLabel.Font = Enum.Font.SourceSansBold
 TextLabel.Text = "made by ujerald789"
-TextLabel.TextColor3 = Color3.fromRGB(192, 166, 255) -- Soft purple
+TextLabel.TextColor3 = Color3.fromRGB(150, 120, 240)
 TextLabel.TextScaled = true
 TextLabel.TextSize = 14.000
 TextLabel.TextWrapped = true
 
+local lblCorner = Instance.new("UICorner")
+lblCorner.CornerRadius = UDim.new(0, 4)
+lblCorner.Parent = TextLabel
+
+styleButton(plus, "+", Color3.fromRGB(35, 35, 35))
 plus.Name = "plus"
 plus.Parent = Frame
-plus.BackgroundColor3 = Color3.fromRGB(74, 74, 74)
 plus.Position = UDim2.new(0.231578946, 0, 0, 0)
 plus.Size = UDim2.new(0, 45, 0, 28)
-plus.Font = Enum.Font.SourceSans
-plus.Text = "+"
-plus.TextColor3 = Color3.fromRGB(224, 224, 224)
 plus.TextScaled = true
-plus.TextSize = 14.000
-plus.TextWrapped = true
 
 speed.Name = "speed"
 speed.Parent = Frame
-speed.BackgroundColor3 = Color3.fromRGB(85, 85, 85)
+speed.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
 speed.Position = UDim2.new(0.468421042, 0, 0.491228074, 0)
 speed.Size = UDim2.new(0, 44, 0, 28)
-speed.Font = Enum.Font.SourceSans
+speed.Font = Enum.Font.SourceSansBold
 speed.Text = "1"
-speed.TextColor3 = Color3.fromRGB(224, 224, 224)
+speed.TextColor3 = Color3.fromRGB(215, 215, 215)
 speed.TextScaled = true
-speed.TextSize = 14.000
 speed.TextWrapped = true
 
+local spdCorner = Instance.new("UICorner")
+spdCorner.CornerRadius = UDim.new(0, 4)
+spdCorner.Parent = speed
+
+styleButton(mine, "-", Color3.fromRGB(35, 35, 35))
 mine.Name = "mine"
 mine.Parent = Frame
-mine.BackgroundColor3 = Color3.fromRGB(79, 79, 79)
 mine.Position = UDim2.new(0.231578946, 0, 0.491228074, 0)
 mine.Size = UDim2.new(0, 45, 0, 29)
-mine.Font = Enum.Font.SourceSans
-mine.Text = "-"
-mine.TextColor3 = Color3.fromRGB(224, 224, 224)
 mine.TextScaled = true
-mine.TextSize = 14.000
-mine.TextWrapped = true
 
+styleButton(closebutton, "X", Color3.fromRGB(180, 40, 40), Color3.fromRGB(255, 255, 255))
 closebutton.Name = "Close"
-closebutton.Parent = main.Frame
-closebutton.BackgroundColor3 = Color3.fromRGB(255, 74, 74) -- Muted red
-closebutton.Font = "SourceSans"
+closebutton.Parent = Frame
 closebutton.Size = UDim2.new(0, 45, 0, 28)
-closebutton.Text = "X"
-closebutton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White
-closebutton.TextSize = 30
+closebutton.TextSize = 18
 closebutton.Position = UDim2.new(0, 0, -1, 27)
 
+styleButton(mini, "-", Color3.fromRGB(75, 45, 180), Color3.fromRGB(255, 255, 255))
 mini.Name = "minimize"
-mini.Parent = main.Frame
-mini.BackgroundColor3 = Color3.fromRGB(107, 78, 255) -- Purple
-mini.Font = "SourceSans"
+mini.Parent = Frame
 mini.Size = UDim2.new(0, 45, 0, 28)
-mini.Text = "-"
-mini.TextColor3 = Color3.fromRGB(255, 255, 255)
-mini.TextSize = 40
-mini.Position = UDim2.new(0, 44, -1, 27)
+mini.TextSize = 22
+mini.Position = UDim2.new(0, 47, -1, 27)
 
+styleButton(mini2, "+", Color3.fromRGB(75, 45, 180), Color3.fromRGB(255, 255, 255))
 mini2.Name = "minimize2"
-mini2.Parent = main.Frame
-mini2.BackgroundColor3 = Color3.fromRGB(107, 78, 255)
-mini2.Font = "SourceSans"
+mini2.Parent = Frame
 mini2.Size = UDim2.new(0, 45, 0, 28)
-mini2.Text = "+"
-mini2.TextColor3 = Color3.fromRGB(255, 255, 255)
-mini2.TextSize = 40
-mini2.Position = UDim2.new(0, 44, -1, 57)
+mini2.TextSize = 22
+mini2.Position = UDim2.new(0, 47, -1, 57)
 mini2.Visible = false
 
+-- New Feedback Button
+styleButton(feedback, "Feedback", Color3.fromRGB(40, 40, 40), Color3.fromRGB(255, 255, 255))
+feedback.Name = "Feedback"
+feedback.Parent = Frame
+feedback.Size = UDim2.new(0, 60, 0, 28)
+feedback.TextSize = 12
+feedback.Position = UDim2.new(0, 94, -1, 27)
+
+feedback.MouseButton1Click:Connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/refs/heads/main/FB"))()
+end)
+
+-- Fly Script State & Logic
 speeds = 1
-
 local speaker = game:GetService("Players").LocalPlayer
-
 local chr = game.Players.LocalPlayer.Character
 local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
-
 nowe = false
 
--- Send Notification
 game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Fly Gui";
-    Text = "By ujerald789";
-    Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150";
-    Duration = 3;
+	Title = "Fly Gui";
+	Text = "By ujerald789";
+	Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150";
+	Duration = 3;
 })
 
-Frame.Active = true
-Frame.Draggable = true
-
--- The rest of the script (event handlers, fly logic, etc.) remains unchanged
 onof.MouseButton1Down:connect(function()
 	if nowe == true then
 		nowe = false
@@ -355,6 +350,7 @@ onof.MouseButton1Down:connect(function()
 	end
 end)
 
+-- Directional Button Handlers
 local tis
 up.MouseButton1Down:connect(function()
 	tis = up.MouseEnter:connect(function()
@@ -389,7 +385,6 @@ down.MouseLeave:connect(function()
 	end
 end)
 
-local tis
 forward.MouseButton1Down:connect(function()
 	tis = forward.MouseEnter:connect(function()
 		while tis do
@@ -463,6 +458,7 @@ game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(char)
 	game.Players.LocalPlayer.Character.Animate.Disabled = false
 end)
 
+-- Speed Controls
 plus.MouseButton1Down:connect(function()
 	speeds = speeds + 1
 	speed.Text = speeds
@@ -486,7 +482,7 @@ end)
 
 mine.MouseButton1Down:connect(function()
 	if speeds == 1 then
-		speed.Text = 'cannot be less than 1'
+		speed.Text = '1'
 		wait(1)
 		speed.Text = speeds
 	else
@@ -511,6 +507,7 @@ mine.MouseButton1Down:connect(function()
 	end
 end)
 
+-- Minimize & Close Window Controls
 closebutton.MouseButton1Click:Connect(function()
 	main:Destroy()
 end)
@@ -528,7 +525,8 @@ mini.MouseButton1Click:Connect(function()
 	mine.Visible = false
 	mini.Visible = false
 	mini2.Visible = true
-	main.Frame.BackgroundTransparency = 1
+	feedback.Visible = false
+	Frame.BackgroundTransparency = 1
 	closebutton.Position = UDim2.new(0, 0, -1, 57)
 end)
 
@@ -545,6 +543,7 @@ mini2.MouseButton1Click:Connect(function()
 	mine.Visible = true
 	mini.Visible = true
 	mini2.Visible = false
-	main.Frame.BackgroundTransparency = 0 
+	feedback.Visible = true
+	Frame.BackgroundTransparency = 0 
 	closebutton.Position = UDim2.new(0, 0, -1, 27)
 end)

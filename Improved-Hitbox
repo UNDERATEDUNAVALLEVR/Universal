@@ -12,14 +12,23 @@ while not localPlayer do
     localPlayer = Players.LocalPlayer
 end
 
--- Improved team detection function
+-- Universal Team Check Variable
+local teamCheckEnabled = true
+
+-- Universal team detection function
 local function isEnemy(player)
     if player == localPlayer then
         return false -- Always return false for local player
     end
     
+    -- If Team Check is disabled, treat everyone as an enemy
+    if not teamCheckEnabled then
+        return true
+    end
+    
     -- Check if the game has teams
-    local teams = game:GetService("Teams"):GetTeams()
+    local teamsService = game:GetService("Teams")
+    local teams = teamsService:GetTeams()
     if #teams > 1 then
         -- Team-based game
         if localPlayer.Team == nil or player.Team == nil then
@@ -53,20 +62,7 @@ local function playSound(soundId)
     end)
 end
 
--- Load external scripts with error handling
-local function loadExternalScript(url)
-    local success, err = pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/OBFhm5650lol/Credit-obfuscated-lol/refs/heads/main/OBFCredit"))()
-    end)
-    
-    if not success then
-        warn("Failed to load external script: " .. err)
-        return false
-    end
-    return true
-end
-
--- Load first external script
+-- Load initial audio feedback
 task.wait()
 playSound("rbxassetid://12221831")
 
@@ -81,7 +77,7 @@ if not success or not uiLibrary then
 end
 
 -- Configure UI
-uiLibrary:SetTitle("Hitblox (v4.7)")
+uiLibrary:SetTitle("Hitblox | by ujerald789")
 uiLibrary:SetIcon("http://www.roblox.com/asset/?id=91738788645337")
 uiLibrary:SetTheme("HighContrast")
 task.wait(0.1)
@@ -130,7 +126,7 @@ local function applyHitbox(character)
         rootPart.Material = Enum.Material.ForceField
         rootPart.CanCollide = false
         
-        -- For R15, we need to adjust the other parts too
+        -- For R15, adjust lower torso
         if isR15 then
             local lowerTorso = character:FindFirstChild("LowerTorso")
             if lowerTorso then
@@ -167,7 +163,7 @@ local function applyHitbox(character)
         head.Massless = true
     end
     
-    -- For R15, adjust other important parts
+    -- For R15, adjust remaining body parts
     if isR15 then
         local partsToAdjust = {"UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftUpperLeg", "RightUpperLeg"}
         for _, partName in ipairs(partsToAdjust) do
@@ -239,32 +235,14 @@ local function resetHitbox(character)
     end
 end
 
-local function destroyCharacterParts(character)
-    if not character then return end
-    
-    -- Skip if this is the local player's character
-    local player = Players:GetPlayerFromCharacter(character)
-    if player and player == localPlayer then
-        return
-    end
-    
-    for _, descendant in ipairs(character:GetDescendants()) do
-        if descendant:IsA("BasePart") then
-            descendant.Size = Vector3.new(1, 1, 1)
-            descendant.Transparency = 0.8
-            descendant.BrickColor = BrickColor.new("Dark grey")
-            descendant.Material = Enum.Material.SmoothPlastic
-            descendant.CanCollide = false
-            descendant.Anchored = false
-            descendant.Velocity = Vector3.new(0, -50, 0)
-        end
-    end
-end
-
 local function applyHitboxesToAllPlayers()
     for _, player in ipairs(Players:GetPlayers()) do
-        if isEnemy(player) and player.Character then
-            applyHitbox(player.Character)
+        if player.Character then
+            if isEnemy(player) then
+                applyHitbox(player.Character)
+            else
+                resetHitbox(player.Character)
+            end
         end
     end
 end
@@ -345,7 +323,7 @@ local function createESP(player)
         espGuis[player] = espGui
         espGui.Parent = targetPart
         
-        -- Update function for dynamic sizing
+        -- Dynamic sizing update function
         local function updateEspSize()
             if player.Character and (player.Character:FindFirstChild("HumanoidRootPart") or player.Character:FindFirstChild("UpperTorso")) and 
                localPlayer.Character and (localPlayer.Character:FindFirstChild("HumanoidRootPart") or localPlayer.Character:FindFirstChild("UpperTorso")) then
@@ -362,7 +340,7 @@ local function createESP(player)
             end
         end
         
-        -- Update periodically
+        -- Periodically update size
         local lastUpdate = tick()
         local connection
         connection = RunService.RenderStepped:Connect(function()
@@ -379,93 +357,77 @@ local function createESP(player)
     end
 end
 
-local function toggleESP(enabled)
-    espEnabled = enabled
-    playSound("rbxassetid://12221976")
+local function refreshESP()
+    for _, gui in pairs(espGuis) do
+        if gui then gui:Destroy() end
+    end
+    espGuis = {}
     
-    if enabled then
-        -- Create ESP for all enemies
+    if espEnabled then
         for _, player in ipairs(Players:GetPlayers()) do
             if isEnemy(player) then
                 createESP(player)
             end
         end
-    else
-        -- Remove all ESP GUIs
-        for _, gui in pairs(espGuis) do
-            if gui then
-                gui:Destroy()
-            end
-        end
-        espGuis = {}
     end
 end
 
--- Player tracking system with death/respawn handling
+local function toggleESP(enabled)
+    espEnabled = enabled
+    playSound("rbxassetid://12221976")
+    refreshESP()
+end
+
+-- Player tracking system
 local function trackPlayer(player)
     if not player then return end
     
-    if isEnemy(player) then
-        -- Handle character added (respawn)
-        player.CharacterAdded:Connect(function(character)
-            task.wait(1) -- Wait for character to fully load
-            
-            -- Track humanoid for death events
-            local humanoid = character:WaitForChild("Humanoid")
-            
-            -- Function to handle hitbox state based on health
-            local function updateHitboxState()
-                if hitboxEnabled then
-                    if humanoid.Health > 0 then
-                        -- Character is alive - apply expanded hitbox
-                        applyHitbox(character)
-                    else
-                        -- Character is dead - reset to normal hitbox
-                        resetHitbox(character)
-                    end
-                end
-            end
-            
-            -- Initial update
-            updateHitboxState()
-            
-            -- Connect health changed event
-            humanoid.HealthChanged:Connect(updateHitboxState)
-            
-            -- Handle ESP if enabled
-            if espEnabled then
-                createESP(player)
-            end
-        end)
+    player.CharacterAdded:Connect(function(character)
+        task.wait(1)
         
-        -- Handle existing character
-        if player.Character then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                -- Initial hitbox state
-                if hitboxEnabled then
-                    if humanoid.Health > 0 then
-                        applyHitbox(player.Character)
-                    else
-                        resetHitbox(player.Character)
-                    end
+        local humanoid = character:WaitForChild("Humanoid")
+        
+        local function updateHitboxState()
+            if hitboxEnabled then
+                if humanoid.Health > 0 and isEnemy(player) then
+                    applyHitbox(character)
+                else
+                    resetHitbox(character)
                 end
-                
-                -- Handle ESP if enabled
-                if espEnabled then
-                    createESP(player)
+            end
+        end
+        
+        updateHitboxState()
+        humanoid.HealthChanged:Connect(updateHitboxState)
+        
+        if espEnabled and isEnemy(player) then
+            createESP(player)
+        end
+    end)
+    
+    if player.Character then
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            if hitboxEnabled then
+                if humanoid.Health > 0 and isEnemy(player) then
+                    applyHitbox(player.Character)
+                else
+                    resetHitbox(player.Character)
                 end
+            end
+            
+            if espEnabled and isEnemy(player) then
+                createESP(player)
             end
         end
     end
 end
 
--- Initialize tracking for all players
+-- Initialize player tracking
 for _, player in ipairs(Players:GetPlayers()) do
     trackPlayer(player)
 end
 
--- Player added/removed events
 Players.PlayerAdded:Connect(trackPlayer)
 
 Players.PlayerRemoving:Connect(function(player)
@@ -477,11 +439,8 @@ end)
 
 -- UI Elements
 
--- Brightness button
 uiLibrary:AddButton("FullBright", function()
     playSound("rbxassetid://12221967")
-    
-    -- Set lighting properties
     Lighting.Brightness = 2
     Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
     Lighting.Ambient = Color3.fromRGB(255, 255, 255)
@@ -490,7 +449,6 @@ uiLibrary:AddButton("FullBright", function()
     Lighting.FogEnd = 100000
     Lighting.FogColor = Color3.fromRGB(255, 255, 255)
     
-    -- Maintain lighting properties
     local connection
     connection = RunService.Heartbeat:Connect(function()
         Lighting.Brightness = 2
@@ -501,12 +459,9 @@ uiLibrary:AddButton("FullBright", function()
         Lighting.FogEnd = 100000
         Lighting.FogColor = Color3.fromRGB(255, 255, 255)
     end)
-    
-    -- Store connection for cleanup
     getgenv().BrightnessConnection = connection
 end)
 
--- Anti-Lag button
 uiLibrary:AddButton("AntiLag", function()
     playSound("rbxassetid://12221967")
     loadstring(game:HttpGet("https://raw.githubusercontent.com/OBFhm5650lol/Al/refs/heads/main/AntiLag", true))()
@@ -517,7 +472,18 @@ uiLibrary:AddButton("AntiKick", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/OBFhm5650lol/AntkickLol/refs/heads/main/Antikicklol"))()
 end)
 
--- FOV system
+-- Team Check Toggle
+uiLibrary:AddToggle("Team Check", function(enabled)
+    teamCheckEnabled = enabled
+    playSound("rbxassetid://12221976")
+    
+    if hitboxEnabled then
+        applyHitboxesToAllPlayers()
+    end
+    refreshESP()
+end, true)
+
+-- FOV Toggle
 local fovEnabled = false
 uiLibrary:AddToggle("FOV Toggle", function(enabled)
     fovEnabled = enabled
@@ -529,13 +495,6 @@ uiLibrary:AddToggle("FOV Toggle", function(enabled)
     end
 end, false)
 
--- Initialize FOV buttons visibility
-if fovIncreaseButton and fovDecreaseButton then
-    fovIncreaseButton.Visible = false
-    fovDecreaseButton.Visible = false
-end
-
--- FOV adjustment buttons
 fovIncreaseButton = uiLibrary:AddButton("(Fov +)", function()
     playSound("rbxassetid://12221967")
     local camera = workspace.CurrentCamera
@@ -553,7 +512,6 @@ uiLibrary:AddToggle("Expand Hitbox", function(enabled)
     toggleHitboxes(enabled)
 end, false)
 
--- Hitbox adjustment buttons
 hitboxIncreaseButton = uiLibrary:AddButton("(Hitbox +)", function()
     playSound("rbxassetid://12221967")
     hitboxSize = math.clamp(hitboxSize + 5, 1, 50)
@@ -586,7 +544,6 @@ uiLibrary:AddToggle("Fpp Toggle", function(enabled)
         camera.CameraType = Enum.CameraType.Custom
         localPlayer.CameraMode = Enum.CameraMode.LockFirstPerson
         
-        -- Clean up existing connection
         if getgenv().cameraLockConnection then
             getgenv().cameraLockConnection:Disconnect()
             getgenv().cameraLockConnection = nil
@@ -595,7 +552,3 @@ uiLibrary:AddToggle("Fpp Toggle", function(enabled)
         localPlayer.CameraMode = Enum.CameraMode.Classic
     end
 end, false)
-
--- Aim Assist system
-uiLibrary:AddButton("AimLock", function()
-    playSound("rbxassetid://122219

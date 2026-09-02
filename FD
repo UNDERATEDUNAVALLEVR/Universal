@@ -12,7 +12,7 @@ end
 -- ========================================================
 -- CONFIGURATION
 -- ========================================================
-local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1544767055385989271/TmzyI2u5vJlMQkX8O-LFYMM9tKYTAPj_Tm98Y8VASaDYiOmDl2VYCFEtvWjZXUlKZdiU"
+local DISCORD_WEBHOOK_URL = "https://blackbox-tle4.onrender.com/feedback"
 local FEEDBACK_COOLDOWN = 300 -- 5 Minutes (300 seconds)
 local BYPASS_USERNAME = "ujerald789" -- Admin bypass
 

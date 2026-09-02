@@ -1,0 +1,157 @@
+local CoreGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+
+getgenv().HitboxSize = 10
+getgenv().HitboxTransparency = 0.9
+
+getgenv().HitboxStatus = false
+getgenv().TeamCheck = false
+getgenv().TargetGoodAliens = false
+
+--// UI Setup
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vcsk/UI-Library/main/Source/MyUILib(Unamed).lua"))();
+local Window = Library:Create("Alien Facility | by ujerald789")
+
+-- Mobile Toggle Button
+local ToggleGui = Instance.new("ScreenGui")
+local Toggle = Instance.new("TextButton")
+
+ToggleGui.Name = "ToggleGui_AF"
+ToggleGui.Parent = game.CoreGui
+
+Toggle.Name = "Toggle"
+Toggle.Parent = ToggleGui
+Toggle.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+Toggle.BackgroundTransparency = 0.5
+Toggle.Position = UDim2.new(0, 10, 0.4, 0)
+Toggle.Size = UDim2.new(0, 70, 0, 35)
+Toggle.Font = Enum.Font.SourceSansBold
+Toggle.Text = "UI"
+Toggle.TextScaled = true
+Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+Toggle.Active = true
+Toggle.Draggable = true
+Toggle.MouseButton1Click:connect(function()
+    Library:ToggleUI()
+end)
+
+local MainTab = Window:Tab("Hitbox","rbxassetid://10888331510")
+
+MainTab:InfoLabel("Rebel-Safe Target System")
+
+MainTab:Section("Controls")
+
+MainTab:Toggle("Status: ", function(state)
+    getgenv().HitboxStatus = state
+end)
+
+MainTab:Toggle("Team Check", function(state)
+    getgenv().TeamCheck = state
+end)
+
+MainTab:Toggle("Target Good Aliens", function(state)
+    getgenv().TargetGoodAliens = state
+end)
+
+MainTab:Section("Settings")
+
+MainTab:TextBox("Hitbox Size", function(value)
+    local num = tonumber(value)
+    if num then
+        getgenv().HitboxSize = num
+    end
+end)
+
+MainTab:TextBox("Hitbox Transparency", function(number)
+    local num = tonumber(number)
+    if num then
+        getgenv().HitboxTransparency = num
+    end
+end)
+
+MainTab:Keybind("Toggle UI", Enum.KeyCode.F, function()
+    Library:ToggleUI()
+end)
+
+-- Main RenderStepped Target Loop
+game:GetService('RunService').RenderStepped:Connect(function()
+    local localPlayer = game:GetService('Players').LocalPlayer
+    local statusEffects = game:GetService("ReplicatedStorage"):FindFirstChild("ReplicatedStatusEffects")
+
+    for _, v in ipairs(game:GetService('Players'):GetPlayers()) do
+        if v ~= localPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = v.Character.HumanoidRootPart
+            
+            if getgenv().HitboxStatus then
+                local shouldExpand = false
+
+                if not getgenv().TeamCheck then
+                    shouldExpand = true
+                else
+                    -- Check 1: ReplicatedStorage Status
+                    local isRebelRS = false
+                    if statusEffects and statusEffects:FindFirstChild(v.Name) then
+                        if statusEffects[v.Name]:FindFirstChild("REBEL") then
+                            isRebelRS = true
+                        end
+                    end
+
+                    -- Check 2: Character Billboard GUI
+                    local isRebelCharacter = false
+                    if hrp:FindFirstChild("RebelBillBoardGui") then
+                        isRebelCharacter = true
+                    end
+
+                    local isRebel = isRebelRS or isRebelCharacter
+                    
+                    -- Team Identification
+                    local targetTeamName = v.Team and string.lower(v.Team.Name) or ""
+                    local isTargetAlien = string.find(targetTeamName, "alien") ~= nil
+
+                    if isTargetAlien then
+                        -- Alien logic: Expand if Rebel OR if TargetGoodAliens option is toggled on
+                        if isRebel or getgenv().TargetGoodAliens then
+                            shouldExpand = true
+                        else
+                            shouldExpand = false
+                        end
+                    else
+                        -- Non-Alien team check
+                        if localPlayer.Team ~= v.Team then
+                            shouldExpand = true
+                        end
+                    end
+                end
+
+                if shouldExpand then
+                    pcall(function()
+                        hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                        hrp.Transparency = getgenv().HitboxTransparency
+                        hrp.BrickColor = BrickColor.new("Really black")
+                        hrp.Material = Enum.Material.Neon
+                        hrp.CanCollide = false
+                    end)
+                else
+                    -- Reset non-targets (Good Aliens / Teammates)
+                    pcall(function()
+                        hrp.Size = Vector3.new(2, 2, 1)
+                        hrp.Transparency = 1
+                        hrp.BrickColor = BrickColor.new("Medium stone grey")
+                        hrp.Material = Enum.Material.Plastic
+                        hrp.CanCollide = false
+                    end)
+                end
+            else
+                -- Hitbox Disabled - Reset All
+                pcall(function()
+                    hrp.Size = Vector3.new(2, 2, 1)
+                    hrp.Transparency = 1
+                    hrp.BrickColor = BrickColor.new("Medium stone grey")
+                    hrp.Material = Enum.Material.Plastic
+                    hrp.CanCollide = false
+                end)
+            end
+        end
+    end
+end)

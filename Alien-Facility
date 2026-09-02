@@ -57,16 +57,18 @@ end)
 MainTab:Section("Settings")
 
 MainTab:TextBox("Hitbox Size", function(value)
-    local num = tonumber(value)
-    if num then
+    local text = type(value) == "table" and value.Text or tostring(value)
+    local num = tonumber(text)
+    if num and num > 0 then
         getgenv().HitboxSize = num
     end
 end)
 
 MainTab:TextBox("Hitbox Transparency", function(number)
-    local num = tonumber(number)
+    local text = type(number) == "table" and number.Text or tostring(number)
+    local num = tonumber(text)
     if num then
-        getgenv().HitboxTransparency = num
+        getgenv().HitboxTransparency = math.clamp(num, 0, 1)
     end
 end)
 

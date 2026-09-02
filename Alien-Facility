@@ -36,7 +36,8 @@ Toggle.MouseButton1Click:connect(function()
     Library:ToggleUI()
 end)
 
-local MainTab = Window:Tab("Hitbox","rbxassetid://10888331510")
+-- Main Hitbox Tab
+local MainTab = Window:Tab("Hitbox", "rbxassetid://10888331510")
 
 MainTab:InfoLabel("Simple Hitbox Expander")
 
@@ -74,6 +75,15 @@ end)
 
 MainTab:Keybind("Toggle UI", Enum.KeyCode.F, function()
     Library:ToggleUI()
+end)
+
+-- Feedback Tab
+local FeedbackTab = Window:Tab("Feedback", "rbxassetid://12296135476")
+
+FeedbackTab:InfoLabel("Send feedback or suggestions for this script.")
+
+FeedbackTab:Button("Open Feedback Menu", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
 end)
 
 -- Main RenderStepped Target Loop

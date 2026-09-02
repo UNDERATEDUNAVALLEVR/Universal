@@ -512,3 +512,8 @@ uiLibrary:AddToggle("Fpp Toggle", function(enabled)
         localPlayer.CameraMode = Enum.CameraMode.Classic
     end
 end, false)
+
+uiLibrary:AddButton("Feedback", function()
+    playSound("rbxassetid://12221967")
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
+end)

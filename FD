@@ -1,0 +1,240 @@
+-- Services
+local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+
+local localPlayer = Players.LocalPlayer
+while not localPlayer do
+    task.wait()
+    localPlayer = Players.LocalPlayer
+end
+
+-- ========================================================
+-- CONFIGURATION
+-- ========================================================
+local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1544767055385989271/TmzyI2u5vJlMQkX8O-LFYMM9tKYTAPj_Tm98Y8VASaDYiOmDl2VYCFEtvWjZXUlKZdiU"
+local FEEDBACK_COOLDOWN = 300 -- 5 Minutes (300 seconds)
+local BYPASS_USERNAME = "ujerald789" -- Admin bypass
+
+-- State Tracking
+local lastFeedbackTime = 0
+
+-- ========================================================
+-- WEBHOOK FUNCTION
+-- ========================================================
+local function sendFeedbackToDiscord(scriptName, feedbackText)
+    if DISCORD_WEBHOOK_URL == "" or DISCORD_WEBHOOK_URL == nil then 
+        return false
+    end
+
+    -- Construct direct links for Roblox Markdown
+    local userProfileUrl = "https://www.roblox.com/users/" .. localPlayer.UserId .. "/profile"
+    local gamePlaceUrl = "https://www.roblox.com/games/" .. game.PlaceId
+
+    local formattedUser = "[" .. localPlayer.Name .. " (" .. localPlayer.UserId .. ")](" .. userProfileUrl .. ")"
+    local formattedGame = "[" .. tostring(game.PlaceId) .. "](" .. gamePlaceUrl .. ")"
+
+    local payload = {
+        ["embeds"] = {{
+            ["title"] = "📩 New Script Feedback",
+            ["color"] = 65420,
+            ["fields"] = {
+                {
+                    ["name"] = "Script Name",
+                    ["value"] = scriptName,
+                    ["inline"] = false
+                },
+                {
+                    ["name"] = "User Profile",
+                    ["value"] = formattedUser,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "Game Link",
+                    ["value"] = formattedGame,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "Feedback Message",
+                    ["value"] = feedbackText,
+                    ["inline"] = false
+                }
+            },
+            ["footer"] = {
+                ["text"] = "Universal Feedback System | ujerald789"
+            },
+            ["timestamp"] = DateTime.now():ToIsoDate()
+        }}
+    }
+
+    local jsonPayload = HttpService:JSONEncode(payload)
+    local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
+    
+    if httpRequest then
+        httpRequest({
+            Url = DISCORD_WEBHOOK_URL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = jsonPayload
+        })
+        return true
+    end
+    return false
+end
+
+-- ========================================================
+-- CUSTOM STANDALONE FEEDBACK GUI
+-- ========================================================
+local function openFeedbackGui()
+    -- Check Cooldown (Bypassed for ujerald789)
+    local isBypassed = string.lower(localPlayer.Name) == string.lower(BYPASS_USERNAME)
+    local timeSinceLast = os.time() - lastFeedbackTime
+    
+    if not isBypassed and timeSinceLast < FEEDBACK_COOLDOWN then
+        local remainingSeconds = FEEDBACK_COOLDOWN - timeSinceLast
+        local remainingMinutes = math.ceil(remainingSeconds / 60)
+        StarterGui:SetCore("SendNotification", {
+            Title = "Feedback Cooldown",
+            Text = "Please wait " .. remainingMinutes .. " minute(s) before sending again.",
+            Duration = 3
+        })
+        return
+    end
+
+    -- Cleanup existing GUI if open
+    if localPlayer.PlayerGui:FindFirstChild("ScriptFeedbackGui") then
+        localPlayer.PlayerGui.ScriptFeedbackGui:Destroy()
+    end
+    
+    local feedbackGui = Instance.new("ScreenGui")
+    feedbackGui.Name = "ScriptFeedbackGui"
+    feedbackGui.Parent = localPlayer.PlayerGui
+    feedbackGui.ResetOnSpawn = false
+    
+    local backgroundFrame = Instance.new("Frame", feedbackGui)
+    backgroundFrame.Size = UDim2.new(0, 310, 0, 250)
+    backgroundFrame.Position = UDim2.new(0.5, -155, 0.4, -125)
+    backgroundFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    backgroundFrame.BorderSizePixel = 0
+    backgroundFrame.Active = true
+    backgroundFrame.Draggable = true
+    
+    local uiCorner = Instance.new("UICorner", backgroundFrame)
+    uiCorner.CornerRadius = UDim.new(0, 8)
+    
+    local titleLabel = Instance.new("TextLabel", backgroundFrame)
+    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.Text = "Script Feedback"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextSize = 18
+    
+    -- Script Name Field (Blank by default)
+    local scriptNameBox = Instance.new("TextBox", backgroundFrame)
+    scriptNameBox.Size = UDim2.new(0.9, 0, 0, 30)
+    scriptNameBox.Position = UDim2.new(0.05, 0, 0.15, 0)
+    scriptNameBox.PlaceholderText = "Enter Script Name (Required)..."
+    scriptNameBox.Text = ""
+    scriptNameBox.ClearTextOnFocus = false
+    scriptNameBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    scriptNameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    scriptNameBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+    scriptNameBox.Font = Enum.Font.SourceSans
+    scriptNameBox.TextSize = 14
+    
+    local scriptCorner = Instance.new("UICorner", scriptNameBox)
+    scriptCorner.CornerRadius = UDim.new(0, 5)
+    
+    -- Feedback Message Field
+    local textBox = Instance.new("TextBox", backgroundFrame)
+    textBox.Size = UDim2.new(0.9, 0, 0, 75)
+    textBox.Position = UDim2.new(0.05, 0, 0.31, 0)
+    textBox.PlaceholderText = "Write your feedback or bug report here..."
+    textBox.Text = ""
+    textBox.ClearTextOnFocus = false
+    textBox.TextWrapped = true
+    textBox.TextYAlignment = Enum.TextYAlignment.Top
+    textBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+    textBox.Font = Enum.Font.SourceSans
+    textBox.TextSize = 14
+    
+    local boxCorner = Instance.new("UICorner", textBox)
+    boxCorner.CornerRadius = UDim.new(0, 5)
+
+    -- Status Warning Label
+    local warningLabel = Instance.new("TextLabel", backgroundFrame)
+    warningLabel.Size = UDim2.new(0.9, 0, 0, 20)
+    warningLabel.Position = UDim2.new(0.05, 0, 0.66, 0)
+    warningLabel.Text = ""
+    warningLabel.TextColor3 = Color3.fromRGB(255, 70, 70)
+    warningLabel.BackgroundTransparency = 1
+    warningLabel.Font = Enum.Font.SourceSansBold
+    warningLabel.TextSize = 13
+    
+    -- Send Button
+    local sendBtn = Instance.new("TextButton", backgroundFrame)
+    sendBtn.Size = UDim2.new(0.42, 0, 0, 30)
+    sendBtn.Position = UDim2.new(0.05, 0, 0.80, 0)
+    sendBtn.Text = "Send"
+    sendBtn.BackgroundColor3 = Color3.fromRGB(40, 160, 80)
+    sendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sendBtn.Font = Enum.Font.SourceSansBold
+    sendBtn.TextSize = 15
+    
+    local sendCorner = Instance.new("UICorner", sendBtn)
+    sendCorner.CornerRadius = UDim.new(0, 5)
+    
+    -- Cancel Button
+    local closeBtn = Instance.new("TextButton", backgroundFrame)
+    closeBtn.Size = UDim2.new(0.42, 0, 0, 30)
+    closeBtn.Position = UDim2.new(0.53, 0, 0.80, 0)
+    closeBtn.Text = "Cancel"
+    closeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.Font = Enum.Font.SourceSansBold
+    closeBtn.TextSize = 15
+    
+    local closeCorner = Instance.new("UICorner", closeBtn)
+    closeCorner.CornerRadius = UDim.new(0, 5)
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        feedbackGui:Destroy()
+    end)
+    
+    sendBtn.MouseButton1Click:Connect(function()
+        -- Trim spaces
+        local cleanScriptName = string.gsub(scriptNameBox.Text, "^%s*(.-)%s*$", "%1")
+        local cleanFeedback = string.gsub(textBox.Text, "^%s*(.-)%s*$", "%1")
+
+        -- Validation Checks
+        if cleanScriptName == "" then
+            warningLabel.Text = "Error: Please enter a script name!"
+            return
+        end
+
+        if cleanFeedback == "" then
+            warningLabel.Text = "Error: Feedback message cannot be blank!"
+            return
+        end
+
+        local success = sendFeedbackToDiscord(cleanScriptName, cleanFeedback)
+        if success then
+            lastFeedbackTime = os.time()
+            feedbackGui:Destroy()
+            
+            StarterGui:SetCore("SendNotification", {
+                Title = "Feedback System",
+                Text = isBypassed and "Feedback sent! (Cooldown Bypassed)" or "Feedback sent successfully!",
+                Duration = 3
+            })
+        else
+            warningLabel.Text = "Failed to send! Check Webhook URL."
+        end
+    end)
+end
+
+-- Open the GUI directly when executed
+openFeedbackGui()

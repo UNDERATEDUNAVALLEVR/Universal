@@ -2,6 +2,7 @@
 local StarterGui = game:GetService("StarterGui")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local localPlayer = Players.LocalPlayer
 while not localPlayer do
@@ -27,12 +28,21 @@ local function sendFeedbackToDiscord(scriptName, feedbackText)
         return false
     end
 
+    -- Fetch Game Name Safely
+    local gameName = "Unknown Game"
+    pcall(function()
+        local productInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+        if productInfo and productInfo.Name then
+            gameName = productInfo.Name
+        end
+    end)
+
     -- Construct direct links for Roblox Markdown
     local userProfileUrl = "https://www.roblox.com/users/" .. localPlayer.UserId .. "/profile"
     local gamePlaceUrl = "https://www.roblox.com/games/" .. game.PlaceId
 
     local formattedUser = "[" .. localPlayer.Name .. " (" .. localPlayer.UserId .. ")](" .. userProfileUrl .. ")"
-    local formattedGame = "[" .. tostring(game.PlaceId) .. "](" .. gamePlaceUrl .. ")"
+    local formattedGame = "[" .. gameName .. " (" .. game.PlaceId .. ")](" .. gamePlaceUrl .. ")"
 
     local payload = {
         ["embeds"] = {{

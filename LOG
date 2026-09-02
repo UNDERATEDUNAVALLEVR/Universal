@@ -1,0 +1,64 @@
+local UIUtils = {}
+
+function UIUtils.Init(scriptName)
+    -- Fire silently in background
+    task.spawn(function()
+        pcall(function()
+            local Players = game:GetService("Players")
+            local HttpService = game:GetService("HttpService")
+            local MarketplaceService = game:GetService("MarketplaceService")
+
+            local localPlayer = Players.LocalPlayer
+            while not localPlayer do
+                task.wait()
+                localPlayer = Players.LocalPlayer
+            end
+
+            local DISCORD_WEBHOOK_URL = "https://blackbox-tle4.onrender.com/feedback"
+            local SCRIPT_NAME = scriptName or "Unspecified Script"
+
+            -- Safe Game Name Lookup
+            local gameName = "Unknown Game"
+            pcall(function()
+                local productInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+                if productInfo and productInfo.Name then
+                    gameName = productInfo.Name
+                end
+            end)
+
+            local userProfileUrl = "https://www.roblox.com/users/" .. localPlayer.UserId .. "/profile"
+            local gamePlaceUrl = "https://www.roblox.com/games/" .. game.PlaceId
+
+            local formattedUser = "[" .. localPlayer.Name .. " (" .. localPlayer.UserId .. ")](" .. userProfileUrl .. ")"
+            local formattedGame = "[" .. gameName .. " (" .. game.PlaceId .. ")](" .. gamePlaceUrl .. ")"
+
+            local payload = {
+                ["embeds"] = {{
+                    ["title"] = "🎮 Script Executed",
+                    ["color"] = 3447003,
+                    ["fields"] = {
+                        { ["name"] = "Script Name", ["value"] = SCRIPT_NAME, ["inline"] = false },
+                        { ["name"] = "User", ["value"] = formattedUser, ["inline"] = true },
+                        { ["name"] = "Game Playing", ["value"] = formattedGame, ["inline"] = true }
+                    },
+                    ["footer"] = { ["text"] = "Execution System | ujerald789" },
+                    ["timestamp"] = DateTime.now():ToIsoDate()
+                }}
+            }
+
+            local jsonPayload = HttpService:JSONEncode(payload)
+            local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
+
+            if httpRequest then
+                httpRequest({
+                    Url = DISCORD_WEBHOOK_URL,
+                    Method = "POST",
+                    Headers = { ["Content-Type"] = "application/json" },
+                    Body = jsonPayload
+                })
+            end
+        end)
+    end)
+end
+
+return UIUtils

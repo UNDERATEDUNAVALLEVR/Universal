@@ -1,0 +1,12 @@
+local workspace = game:GetService("Workspace")
+
+workspace.DescendantAdded:Connect(function(prompt)
+    if prompt:IsA("ProximityPrompt") then
+        prompt.HoldDuration = 0
+        prompt.RequiresLineOfSight = false
+        
+        if fireproximityprompt then
+            fireproximityprompt(prompt)
+        end
+    end
+end)

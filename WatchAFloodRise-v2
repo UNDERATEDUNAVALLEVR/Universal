@@ -1,0 +1,294 @@
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Clean up existing UI instance
+if CoreGui:FindFirstChild("UJ_FloodRiseUI") then
+    CoreGui.UJ_FloodRiseUI:Destroy()
+end
+
+-- ScreenGui Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "UJ_FloodRiseUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+-- FLOATING HIDE/SHOW BUTTON
+local ToggleGuiBtn = Instance.new("TextButton")
+ToggleGuiBtn.Name = "ToggleGuiBtn"
+ToggleGuiBtn.Size = UDim2.new(0, 80, 0, 30)
+ToggleGuiBtn.Position = UDim2.new(0, 10, 0.4, 0)
+ToggleGuiBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+ToggleGuiBtn.Text = "Hide UI"
+ToggleGuiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleGuiBtn.Font = Enum.Font.SourceSansBold
+ToggleGuiBtn.TextSize = 14
+ToggleGuiBtn.Active = true
+ToggleGuiBtn.Draggable = true
+ToggleGuiBtn.Parent = ScreenGui
+
+local ToggleGuiCorner = Instance.new("UICorner")
+ToggleGuiCorner.CornerRadius = UDim.new(0, 6)
+ToggleGuiCorner.Parent = ToggleGuiBtn
+
+local ToggleGuiStroke = Instance.new("UIStroke")
+ToggleGuiStroke.Color = Color3.fromRGB(60, 60, 70)
+ToggleGuiStroke.Thickness = 1
+ToggleGuiStroke.Parent = ToggleGuiBtn
+
+-- Main Frame (Dark Theme)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 340, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -170, 0.4, -140)
+MainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+-- Top Bar Title & Credits
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 35)
+TitleLabel.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+TitleLabel.Text = "  Watch A Flood Rise | by ujerald789"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 14
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = TitleLabel
+
+-- Tab Buttons Header
+local MainTabBtn = Instance.new("TextButton")
+MainTabBtn.Size = UDim2.new(0.5, -5, 0, 30)
+MainTabBtn.Position = UDim2.new(0, 0, 0, 40)
+MainTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+MainTabBtn.Text = "Main"
+MainTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MainTabBtn.Font = Enum.Font.SourceSansBold
+MainTabBtn.Parent = MainFrame
+
+local FBTabBtn = Instance.new("TextButton")
+FBTabBtn.Size = UDim2.new(0.5, -5, 0, 30)
+FBTabBtn.Position = UDim2.new(0.5, 5, 0, 40)
+FBTabBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+FBTabBtn.Text = "Feedback"
+FBTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+FBTabBtn.Font = Enum.Font.SourceSansBold
+FBTabBtn.Parent = MainFrame
+
+-- Containers
+local MainContainer = Instance.new("Frame")
+MainContainer.Size = UDim2.new(1, -20, 1, -85)
+MainContainer.Position = UDim2.new(0, 10, 0, 75)
+MainContainer.BackgroundTransparency = 1
+MainContainer.Parent = MainFrame
+
+local FBContainer = Instance.new("Frame")
+FBContainer.Size = UDim2.new(1, -20, 1, -85)
+FBContainer.Position = UDim2.new(0, 10, 0, 75)
+FBContainer.BackgroundTransparency = 1
+FBContainer.Visible = false
+FBContainer.Parent = MainFrame
+
+-- HIDE / SHOW UI FUNCTIONALITY
+local uiVisible = true
+ToggleGuiBtn.MouseButton1Click:Connect(function()
+    uiVisible = not uiVisible
+    MainFrame.Visible = uiVisible
+    if uiVisible then
+        ToggleGuiBtn.Text = "Hide UI"
+        ToggleGuiBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+    else
+        ToggleGuiBtn.Text = "Show UI"
+        ToggleGuiBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+    end
+end)
+
+-- TAB SWITCHING
+MainTabBtn.MouseButton1Click:Connect(function()
+    MainContainer.Visible = true
+    FBContainer.Visible = false
+    MainTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    MainTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    FBTabBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    FBTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+FBTabBtn.MouseButton1Click:Connect(function()
+    MainContainer.Visible = false
+    FBContainer.Visible = true
+    FBTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    FBTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MainTabBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    MainTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+-- STUDS FARM LOGIC
+local isFarming = false
+
+local ToggleFarmBtn = Instance.new("TextButton")
+ToggleFarmBtn.Size = UDim2.new(1, 0, 0, 45)
+ToggleFarmBtn.Position = UDim2.new(0, 0, 0, 5)
+ToggleFarmBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- RED (OFF)
+ToggleFarmBtn.Text = "Auto Touch Studs: OFF"
+ToggleFarmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleFarmBtn.Font = Enum.Font.SourceSansBold
+ToggleFarmBtn.TextSize = 16
+ToggleFarmBtn.Parent = MainContainer
+
+local FarmCorner = Instance.new("UICorner")
+FarmCorner.CornerRadius = UDim.new(0, 6)
+FarmCorner.Parent = ToggleFarmBtn
+
+local function startFarmingLoop()
+    task.spawn(function()
+        while isFarming do
+            local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+
+            if hrp then
+                local giverModel = workspace:FindFirstChild("Studs")
+                if giverModel then
+                    local giverPart = giverModel:FindFirstChildWhichIsA("BasePart", true)
+                    if giverPart then
+                        firetouchinterest(hrp, giverPart, 0)
+                        firetouchinterest(hrp, giverPart, 1)
+                    end
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+
+ToggleFarmBtn.MouseButton1Click:Connect(function()
+    isFarming = not isFarming
+    if isFarming then
+        ToggleFarmBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- GREEN (ON)
+        ToggleFarmBtn.Text = "Auto Farm Studs: ON"
+        startFarmingLoop()
+    else
+        ToggleFarmBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- RED (OFF)
+        ToggleFarmBtn.Text = "Auto Farm Studs: OFF"
+    end
+end)
+
+-- DUCK ESP LOGIC
+local isEspActive = false
+local espConnection = nil
+
+local ToggleEspBtn = Instance.new("TextButton")
+ToggleEspBtn.Size = UDim2.new(1, 0, 0, 45)
+ToggleEspBtn.Position = UDim2.new(0, 0, 0, 60)
+ToggleEspBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- RED (OFF)
+ToggleEspBtn.Text = "Duck ESP: OFF"
+ToggleEspBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleEspBtn.Font = Enum.Font.SourceSansBold
+ToggleEspBtn.TextSize = 16
+ToggleEspBtn.Parent = MainContainer
+
+local EspCorner = Instance.new("UICorner")
+EspCorner.CornerRadius = UDim.new(0, 6)
+EspCorner.Parent = ToggleEspBtn
+
+local function addHighlight(part)
+    if part:IsA("BasePart") and not part:FindFirstChild("DuckHighlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "DuckHighlight"
+        highlight.FillColor = Color3.fromRGB(255, 255, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 0)
+        highlight.Parent = part
+    end
+end
+
+local function removeHighlight(part)
+    if part:IsA("BasePart") then
+        local highlight = part:FindFirstChild("DuckHighlight")
+        if highlight then
+            highlight:Destroy()
+        end
+    end
+end
+
+local function processFolder(parent, apply)
+    for _, child in ipairs(parent:GetChildren()) do
+        if child:IsA("BasePart") then
+            if apply then addHighlight(child) else removeHighlight(child) end
+        end
+        processFolder(child, apply)
+    end
+end
+
+local function enableDuckESP()
+    local DucksFolder = workspace:FindFirstChild("Ducks")
+    if DucksFolder then
+        processFolder(DucksFolder, true)
+        espConnection = DucksFolder.DescendantAdded:Connect(function(descendant)
+            if isEspActive and descendant:IsA("BasePart") then
+                addHighlight(descendant)
+            end
+        end)
+    end
+end
+
+local function disableDuckESP()
+    if espConnection then
+        espConnection:Disconnect()
+        espConnection = nil
+    end
+    local DucksFolder = workspace:FindFirstChild("Ducks")
+    if DucksFolder then
+        processFolder(DucksFolder, false)
+    end
+end
+
+ToggleEspBtn.MouseButton1Click:Connect(function()
+    isEspActive = not isEspActive
+    if isEspActive then
+        ToggleEspBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- GREEN (ON)
+        ToggleEspBtn.Text = "Duck ESP: ON"
+        enableDuckESP()
+    else
+        ToggleEspBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- RED (OFF)
+        ToggleEspBtn.Text = "Duck ESP: OFF"
+        disableDuckESP()
+    end
+end)
+
+-- FEEDBACK TAB BUTTON
+local SendFBBtn = Instance.new("TextButton")
+SendFBBtn.Size = UDim2.new(1, 0, 0, 45)
+SendFBBtn.Position = UDim2.new(0, 0, 0, 10)
+SendFBBtn.BackgroundColor3 = Color3.fromRGB(45, 85, 155)
+SendFBBtn.Text = "Send Feedback"
+SendFBBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SendFBBtn.Font = Enum.Font.SourceSansBold
+SendFBBtn.TextSize = 16
+SendFBBtn.Parent = FBContainer
+
+local FBCorner = Instance.new("UICorner")
+FBCorner.CornerRadius = UDim.new(0, 6)
+FBCorner.Parent = SendFBBtn
+
+SendFBBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/refs/heads/main/FB"))()
+end)
+
+local CreditLabel = Instance.new("TextLabel")
+CreditLabel.Size = UDim2.new(1, 0, 0, 25)
+CreditLabel.Position = UDim2.new(0, 0, 0, 65)
+CreditLabel.BackgroundTransparency = 1
+CreditLabel.Text = "Scripted by ujerald789"
+CreditLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+CreditLabel.Font = Enum.Font.SourceSans
+CreditLabel.TextSize = 14
+CreditLabel.Parent = FBContainer

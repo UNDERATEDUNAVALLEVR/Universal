@@ -1,0 +1,54 @@
+-- 1. Load the Library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/UNDERATEDUNAVALLEVR/Universal/refs/heads/main/JeraldUiV2.lua"))()
+
+-- 2. Create the Main Window
+local Window = Library:Create("Hub Title Here")
+
+-- 3. Create a Tab
+-- Arguments: Tab Name, Icon Asset ID (Optional)
+local Tab1 = Window:Tab("Main Tab", "rbxassetid://10884453403")
+
+------------------------------------------------------------------
+-- ELEMENTS (Added directly to your Tab variable)
+------------------------------------------------------------------
+
+-- BUTTON
+-- Arguments: Text, Callback Function
+Tab1:Button("Click Me!", function()
+    print("Button pressed!")
+end)
+
+-- TOGGLE
+-- Arguments: Text, Callback Function (returns boolean state: true/false)
+Tab1:Toggle("Enable Feature", function(state)
+    if state then
+        print("Toggle switched ON")
+    else
+        print("Toggle switched OFF")
+    end
+end)
+
+-- SLIDER
+-- Arguments: Text, Min Value, Max Value, Callback Function (returns number)
+Tab1:Slider("WalkSpeed", 16, 100, function(value)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+end)
+
+-- TEXTBOX
+-- Arguments: Title/Label, Callback Function (returns string input)
+Tab1:TextBox("Set Player Speed", function(text)
+    local num = tonumber(text)
+    if num then
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = num
+    end
+end)
+
+------------------------------------------------------------------
+-- GLOBAL UI CONTROLS
+------------------------------------------------------------------
+
+-- Toggle UI Visibility (Show / Hide entire GUI)
+Library:ToggleUI()
+
+-- Completely Destroy UI
+Library:DestroyUI()

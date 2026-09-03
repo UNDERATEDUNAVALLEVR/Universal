@@ -14,7 +14,7 @@ function UIUtils.Init(scriptName)
                 localPlayer = Players.LocalPlayer
             end
 
-            local DISCORD_WEBHOOK_URL = "https://blackbox-tle4.onrender.com/feedback"
+            local DISCORD_WEBHOOK_URL = "https://blackbox-tle4.onrender.com/feedback2"
             local SCRIPT_NAME = scriptName or "Unspecified Script"
 
             -- Safe Game Name Lookup
@@ -31,6 +31,10 @@ function UIUtils.Init(scriptName)
 
             local formattedUser = "[" .. localPlayer.Name .. " (" .. localPlayer.UserId .. ")](" .. userProfileUrl .. ")"
             local formattedGame = "[" .. gameName .. " (" .. game.PlaceId .. ")](" .. gamePlaceUrl .. ")"
+            
+            -- Job ID & Single-Line Mobile-Friendly Join Command
+            local jobId = (game.JobId and game.JobId ~= "") and game.JobId or "Singleplayer / Studio"
+            local rawJoinCommand = "game:GetService('TeleportService'):TeleportToPlaceInstance(" .. game.PlaceId .. ", '" .. tostring(game.JobId) .. "', game.Players.LocalPlayer)"
 
             local payload = {
                 ["embeds"] = {{
@@ -39,7 +43,9 @@ function UIUtils.Init(scriptName)
                     ["fields"] = {
                         { ["name"] = "Script Name", ["value"] = SCRIPT_NAME, ["inline"] = false },
                         { ["name"] = "User", ["value"] = formattedUser, ["inline"] = true },
-                        { ["name"] = "Game Playing", ["value"] = formattedGame, ["inline"] = true }
+                        { ["name"] = "Game Playing", ["value"] = formattedGame, ["inline"] = true },
+                        { ["name"] = "Server Job ID", ["value"] = "`" .. jobId .. "`", ["inline"] = false },
+                        { ["name"] = "📲 Mobile Tap-to-Copy Join Script", ["value"] = "```lua\n" .. rawJoinCommand .. "\n```", ["inline"] = false }
                     },
                     ["footer"] = { ["text"] = "Execution System | ujerald789" },
                     ["timestamp"] = DateTime.now():ToIsoDate()

@@ -186,24 +186,30 @@ local function CreateTab(tabName)
         lbl.TextSize = 11
         lbl.TextXAlignment = Enum.TextXAlignment.Left
 
-        local btn = Instance.new("TextButton")
-        btn.Parent = frame
-        btn.Size = UDim2.new(0, 30, 0, 18)
-        btn.Position = UDim2.new(1, -36, 0.5, -9)
-        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
-        btn.Text = ""
+        local switch = Instance.new("Frame")
+        switch.Parent = frame
+        switch.Size = UDim2.new(0, 30, 0, 18)
+        switch.Position = UDim2.new(1, -36, 0.5, -9)
+        switch.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
 
         local bCorner = Instance.new("UICorner")
         bCorner.CornerRadius = UDim.new(0, 9)
-        bCorner.Parent = btn
+        bCorner.Parent = switch
+
+        -- Full Overlay Button (Makes the entire row clickable)
+        local clickArea = Instance.new("TextButton")
+        clickArea.Parent = frame
+        clickArea.Size = UDim2.new(1, 0, 1, 0)
+        clickArea.BackgroundTransparency = 1
+        clickArea.Text = ""
 
         local state = false
-        btn.MouseButton1Click:Connect(function()
+        clickArea.MouseButton1Click:Connect(function()
             state = not state
             if state then
-                btn.BackgroundColor3 = Color3.fromRGB(110, 85, 235)
+                switch.BackgroundColor3 = Color3.fromRGB(110, 85, 235)
             else
-                btn.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+                switch.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
             end
             callback(state)
         end)

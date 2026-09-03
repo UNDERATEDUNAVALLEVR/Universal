@@ -19,16 +19,16 @@ local function LoadAlienFacilityScript()
     MainGui.ResetOnSpawn = false
     MainGui.Parent = game.CoreGui
 
-    -- Mobile Toggle Button
+    -- Mobile / On-Screen Toggle Button
     local MobileToggle = Instance.new("TextButton")
     MobileToggle.Name = "MobileToggle"
     MobileToggle.Parent = MainGui
     MobileToggle.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
     MobileToggle.Position = UDim2.new(0, 15, 0.4, 0)
-    MobileToggle.Size = UDim2.new(0, 95, 0, 36)
+    MobileToggle.Size = UDim2.new(0, 115, 0, 36)
     MobileToggle.Font = Enum.Font.GothamBold
-    MobileToggle.Text = "Hide / Show"
-    MobileToggle.TextSize = 13
+    MobileToggle.Text = "Hide / Show [F]"
+    MobileToggle.TextSize = 12
     MobileToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
     MobileToggle.Active = true
     MobileToggle.Draggable = true
@@ -107,9 +107,19 @@ local function LoadAlienFacilityScript()
     ContentFolder.Size = UDim2.new(1, -108, 1, -54)
     ContentFolder.BackgroundTransparency = 1
 
-    -- Toggle Window Visibility
-    MobileToggle.MouseButton1Click:Connect(function()
+    -- Toggle Window Visibility Function
+    local function ToggleWindow()
         Window.Visible = not Window.Visible
+    end
+
+    -- Click Event for Mobile/Screen Toggle Button
+    MobileToggle.MouseButton1Click:Connect(ToggleWindow)
+
+    -- Keyboard Keybind Support (F Key)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.F then
+            ToggleWindow()
+        end
     end)
 
     -- Tab Creator
@@ -298,13 +308,6 @@ local function LoadAlienFacilityScript()
     -- Feedback Tab Controls
     FeedbackTab:Button("Open Feedback Menu", function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
-    end)
-
-    -- Keyboard Keybind Support (F)
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == Enum.KeyCode.F then
-            Window.Visible = not Window.Visible
-        end
     end)
 
     -- Target Loop

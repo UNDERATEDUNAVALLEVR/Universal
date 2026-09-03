@@ -84,9 +84,7 @@ local function LoadAlienFacilityScript()
 
     -- Feedback Tab
     local FeedbackTab = Window:Tab("Feedback", "rbxassetid://12296135476")
-
     FeedbackTab:InfoLabel("Send feedback or suggestions for this script.")
-
     FeedbackTab:Button("Open Feedback Menu", function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
     end)
@@ -95,6 +93,10 @@ local function LoadAlienFacilityScript()
     RunService.RenderStepped:Connect(function()
         local localPlayer = Players.LocalPlayer
         local statusEffects = game:GetService("ReplicatedStorage"):FindFirstChild("ReplicatedStatusEffects")
+
+        -- Identify LocalPlayer's Team
+        local myTeamName = localPlayer.Team and string.lower(localPlayer.Team.Name) or ""
+        local amIAlien = string.find(myTeamName, "alien") ~= nil
 
         for _, v in ipairs(Players:GetPlayers()) do
             if v ~= localPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
@@ -106,35 +108,38 @@ local function LoadAlienFacilityScript()
                     if not getgenv().TeamCheck then
                         shouldExpand = true
                     else
-                        -- Check 1: ReplicatedStorage Status
-                        local isRebelRS = false
-                        if statusEffects and statusEffects:FindFirstChild(v.Name) then
-                            if statusEffects[v.Name]:FindFirstChild("REBEL") then
-                                isRebelRS = true
-                            end
-                        end
-
-                        -- Check 2: Character Billboard GUI
-                        local isRebelCharacter = false
-                        if hrp:FindFirstChild("RebelBillBoardGui") then
-                            isRebelCharacter = true
-                        end
-
-                        local isRebel = isRebelRS or isRebelCharacter
-                        
-                        -- Team Identification
                         local targetTeamName = v.Team and string.lower(v.Team.Name) or ""
                         local isTargetAlien = string.find(targetTeamName, "alien") ~= nil
 
-                        if isTargetAlien then
-                            if isRebel or getgenv().TargetGoodAliens then
+                        if amIAlien then
+                            -- ALIEN TEAM: Never target fellow aliens (Rebel or Good)
+                            if not isTargetAlien then
                                 shouldExpand = true
-                            else
-                                shouldExpand = false
                             end
                         else
-                            if localPlayer.Team ~= v.Team then
-                                shouldExpand = true
+                            -- HUMAN/GUARD TEAM: Rebel filtering logic
+                            if isTargetAlien then
+                                local isRebelRS = false
+                                if statusEffects and statusEffects:FindFirstChild(v.Name) then
+                                    if statusEffects[v.Name]:FindFirstChild("REBEL") then
+                                        isRebelRS = true
+                                    end
+                                end
+
+                                local isRebelCharacter = false
+                                if hrp:FindFirstChild("RebelBillBoardGui") then
+                                    isRebelCharacter = true
+                                end
+
+                                local isRebel = isRebelRS or isRebelCharacter
+
+                                if isRebel or getgenv().TargetGoodAliens then
+                                    shouldExpand = true
+                                end
+                            else
+                                if localPlayer.Team ~= v.Team then
+                                    shouldExpand = true
+                                end
                             end
                         end
                     end
@@ -228,7 +233,6 @@ if not isAlienFacility then
 
     yesBtn.MouseButton1Click:Connect(function()
         promptGui:Destroy()
-        -- Fetch and load your external Universal Hitbox script link
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/Alien/refs/heads/main/UN"))()
     end)
 

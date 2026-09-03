@@ -1,151 +1,162 @@
-local CoreGui = game:GetService("StarterGui")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-getgenv().HitboxSize = 10
-getgenv().HitboxTransparency = 0.9
+local ALIEN_FACILITY_ID = 4569972094
+local isAlienFacility = (game.PlaceId == ALIEN_FACILITY_ID)
 
-getgenv().HitboxStatus = false
-getgenv().TeamCheck = false
-getgenv().TargetGoodAliens = false
+-- Main Alien Facility Logic
+local function LoadAlienFacilityScript()
+    local CoreGui = game:GetService("StarterGui")
 
---// UI Setup
+    getgenv().HitboxSize = 10
+    getgenv().HitboxTransparency = 0.9
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vcsk/UI-Library/main/Source/MyUILib(Unamed).lua"))();
-local Window = Library:Create("Alien Facility | by ujerald789")
+    getgenv().HitboxStatus = false
+    getgenv().TeamCheck = false
+    getgenv().TargetGoodAliens = false
 
--- Mobile Toggle Button
-local ToggleGui = Instance.new("ScreenGui")
-local Toggle = Instance.new("TextButton")
+    --// UI Setup
+    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vcsk/UI-Library/main/Source/MyUILib(Unamed).lua"))();
+    local Window = Library:Create("Alien Facility | by ujerald789")
 
-ToggleGui.Name = "ToggleGui_AF"
-ToggleGui.Parent = game.CoreGui
+    -- Mobile Toggle Button
+    local ToggleGui = Instance.new("ScreenGui")
+    local Toggle = Instance.new("TextButton")
 
-Toggle.Name = "Toggle"
-Toggle.Parent = ToggleGui
-Toggle.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-Toggle.BackgroundTransparency = 0.5
-Toggle.Position = UDim2.new(0, 10, 0.4, 0)
-Toggle.Size = UDim2.new(0, 70, 0, 35)
-Toggle.Font = Enum.Font.SourceSansBold
-Toggle.Text = "UI"
-Toggle.TextScaled = true
-Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-Toggle.Active = true
-Toggle.Draggable = true
-Toggle.MouseButton1Click:connect(function()
-    Library:ToggleUI()
-end)
+    ToggleGui.Name = "ToggleGui_AF"
+    ToggleGui.Parent = game.CoreGui
 
--- Main Hitbox Tab
-local MainTab = Window:Tab("Hitbox", "rbxassetid://10888331510")
+    Toggle.Name = "Toggle"
+    Toggle.Parent = ToggleGui
+    Toggle.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    Toggle.BackgroundTransparency = 0.5
+    Toggle.Position = UDim2.new(0, 10, 0.4, 0)
+    Toggle.Size = UDim2.new(0, 70, 0, 35)
+    Toggle.Font = Enum.Font.SourceSansBold
+    Toggle.Text = "UI"
+    Toggle.TextScaled = true
+    Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Toggle.Active = true
+    Toggle.Draggable = true
+    Toggle.MouseButton1Click:Connect(function()
+        Library:ToggleUI()
+    end)
 
-MainTab:InfoLabel("Simple Hitbox Expander")
+    -- Main Hitbox Tab
+    local MainTab = Window:Tab("Hitbox", "rbxassetid://10888331510")
 
-MainTab:Section("Controls")
+    MainTab:InfoLabel("Simple Hitbox Expander")
+    MainTab:Section("Controls")
 
-MainTab:Toggle("Status: ", function(state)
-    getgenv().HitboxStatus = state
-end)
+    MainTab:Toggle("Status: ", function(state)
+        getgenv().HitboxStatus = state
+    end)
 
-MainTab:Toggle("Team Check", function(state)
-    getgenv().TeamCheck = state
-end)
+    MainTab:Toggle("Team Check", function(state)
+        getgenv().TeamCheck = state
+    end)
 
-MainTab:Toggle("Target Good Aliens", function(state)
-    getgenv().TargetGoodAliens = state
-end)
+    MainTab:Toggle("Target Good Aliens", function(state)
+        getgenv().TargetGoodAliens = state
+    end)
 
-MainTab:Section("Settings")
+    MainTab:Section("Settings")
 
-MainTab:TextBox("Hitbox Size", function(value)
-    local text = type(value) == "table" and value.Text or tostring(value)
-    local num = tonumber(text)
-    if num and num > 0 then
-        getgenv().HitboxSize = num
-    end
-end)
+    MainTab:TextBox("Hitbox Size", function(value)
+        local text = type(value) == "table" and value.Text or tostring(value)
+        local num = tonumber(text)
+        if num and num > 0 then
+            getgenv().HitboxSize = num
+        end
+    end)
 
-MainTab:TextBox("Hitbox Transparency", function(number)
-    local text = type(number) == "table" and number.Text or tostring(number)
-    local num = tonumber(text)
-    if num then
-        getgenv().HitboxTransparency = math.clamp(num, 0, 1)
-    end
-end)
+    MainTab:TextBox("Hitbox Transparency", function(number)
+        local text = type(number) == "table" and number.Text or tostring(number)
+        local num = tonumber(text)
+        if num then
+            getgenv().HitboxTransparency = math.clamp(num, 0, 1)
+        end
+    end)
 
-MainTab:Keybind("Toggle UI", Enum.KeyCode.F, function()
-    Library:ToggleUI()
-end)
+    MainTab:Keybind("Toggle UI", Enum.KeyCode.F, function()
+        Library:ToggleUI()
+    end)
 
--- Feedback Tab
-local FeedbackTab = Window:Tab("Feedback", "rbxassetid://12296135476")
+    -- Feedback Tab
+    local FeedbackTab = Window:Tab("Feedback", "rbxassetid://12296135476")
 
-FeedbackTab:InfoLabel("Send feedback or suggestions for this script.")
+    FeedbackTab:InfoLabel("Send feedback or suggestions for this script.")
 
-FeedbackTab:Button("Open Feedback Menu", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
-end)
+    FeedbackTab:Button("Open Feedback Menu", function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
+    end)
 
--- Main RenderStepped Target Loop
-game:GetService('RunService').RenderStepped:Connect(function()
-    local localPlayer = game:GetService('Players').LocalPlayer
-    local statusEffects = game:GetService("ReplicatedStorage"):FindFirstChild("ReplicatedStatusEffects")
+    -- Main RenderStepped Target Loop
+    RunService.RenderStepped:Connect(function()
+        local localPlayer = Players.LocalPlayer
+        local statusEffects = game:GetService("ReplicatedStorage"):FindFirstChild("ReplicatedStatusEffects")
 
-    for _, v in ipairs(game:GetService('Players'):GetPlayers()) do
-        if v ~= localPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = v.Character.HumanoidRootPart
-            
-            if getgenv().HitboxStatus then
-                local shouldExpand = false
+        for _, v in ipairs(Players:GetPlayers()) do
+            if v ~= localPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = v.Character.HumanoidRootPart
+                
+                if getgenv().HitboxStatus then
+                    local shouldExpand = false
 
-                if not getgenv().TeamCheck then
-                    shouldExpand = true
-                else
-                    -- Check 1: ReplicatedStorage Status
-                    local isRebelRS = false
-                    if statusEffects and statusEffects:FindFirstChild(v.Name) then
-                        if statusEffects[v.Name]:FindFirstChild("REBEL") then
-                            isRebelRS = true
-                        end
-                    end
-
-                    -- Check 2: Character Billboard GUI
-                    local isRebelCharacter = false
-                    if hrp:FindFirstChild("RebelBillBoardGui") then
-                        isRebelCharacter = true
-                    end
-
-                    local isRebel = isRebelRS or isRebelCharacter
-                    
-                    -- Team Identification
-                    local targetTeamName = v.Team and string.lower(v.Team.Name) or ""
-                    local isTargetAlien = string.find(targetTeamName, "alien") ~= nil
-
-                    if isTargetAlien then
-                        -- Alien logic: Expand if Rebel OR if TargetGoodAliens option is toggled on
-                        if isRebel or getgenv().TargetGoodAliens then
-                            shouldExpand = true
-                        else
-                            shouldExpand = false
-                        end
+                    if not getgenv().TeamCheck then
+                        shouldExpand = true
                     else
-                        -- Non-Alien team check
-                        if localPlayer.Team ~= v.Team then
-                            shouldExpand = true
+                        -- Check 1: ReplicatedStorage Status
+                        local isRebelRS = false
+                        if statusEffects and statusEffects:FindFirstChild(v.Name) then
+                            if statusEffects[v.Name]:FindFirstChild("REBEL") then
+                                isRebelRS = true
+                            end
+                        end
+
+                        -- Check 2: Character Billboard GUI
+                        local isRebelCharacter = false
+                        if hrp:FindFirstChild("RebelBillBoardGui") then
+                            isRebelCharacter = true
+                        end
+
+                        local isRebel = isRebelRS or isRebelCharacter
+                        
+                        -- Team Identification
+                        local targetTeamName = v.Team and string.lower(v.Team.Name) or ""
+                        local isTargetAlien = string.find(targetTeamName, "alien") ~= nil
+
+                        if isTargetAlien then
+                            if isRebel or getgenv().TargetGoodAliens then
+                                shouldExpand = true
+                            else
+                                shouldExpand = false
+                            end
+                        else
+                            if localPlayer.Team ~= v.Team then
+                                shouldExpand = true
+                            end
                         end
                     end
-                end
 
-                if shouldExpand then
-                    pcall(function()
-                        hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
-                        hrp.Transparency = getgenv().HitboxTransparency
-                        hrp.BrickColor = BrickColor.new("Really black")
-                        hrp.Material = Enum.Material.Neon
-                        hrp.CanCollide = false
-                    end)
+                    if shouldExpand then
+                        pcall(function()
+                            hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                            hrp.Transparency = getgenv().HitboxTransparency
+                            hrp.BrickColor = BrickColor.new("Really black")
+                            hrp.Material = Enum.Material.Neon
+                            hrp.CanCollide = false
+                        end)
+                    else
+                        pcall(function()
+                            hrp.Size = Vector3.new(2, 2, 1)
+                            hrp.Transparency = 1
+                            hrp.BrickColor = BrickColor.new("Medium stone grey")
+                            hrp.Material = Enum.Material.Plastic
+                            hrp.CanCollide = false
+                        end)
+                    end
                 else
-                    -- Reset non-targets (Good Aliens / Teammates)
                     pcall(function()
                         hrp.Size = Vector3.new(2, 2, 1)
                         hrp.Transparency = 1
@@ -154,16 +165,76 @@ game:GetService('RunService').RenderStepped:Connect(function()
                         hrp.CanCollide = false
                     end)
                 end
-            else
-                -- Hitbox Disabled - Reset All
-                pcall(function()
-                    hrp.Size = Vector3.new(2, 2, 1)
-                    hrp.Transparency = 1
-                    hrp.BrickColor = BrickColor.new("Medium stone grey")
-                    hrp.Material = Enum.Material.Plastic
-                    hrp.CanCollide = false
-                end)
             end
         end
-    end
-end)
+    end)
+end
+
+-- Check game execution context
+if not isAlienFacility then
+    local promptGui = Instance.new("ScreenGui")
+    promptGui.Name = "GameDetectPrompt"
+    promptGui.Parent = game.CoreGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 320, 0, 160)
+    frame.Position = UDim2.new(0.5, -160, 0.4, -80)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    frame.BorderSizePixel = 0
+    frame.Parent = promptGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = frame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 0, 70)
+    label.Position = UDim2.new(0, 10, 0, 10)
+    label.BackgroundTransparency = 1
+    label.Text = "It looks like you're not playing Alien Facility.\nDo you want to load Universal Hitbox Expander instead?"
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 16
+    label.TextWrapped = true
+    label.Parent = frame
+
+    local yesBtn = Instance.new("TextButton")
+    yesBtn.Size = UDim2.new(0, 130, 0, 40)
+    yesBtn.Position = UDim2.new(0, 25, 1, -50)
+    yesBtn.BackgroundColor3 = Color3.fromRGB(45, 125, 45)
+    yesBtn.Text = "Yes"
+    yesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    yesBtn.Font = Enum.Font.SourceSansBold
+    yesBtn.TextSize = 18
+    yesBtn.Parent = frame
+
+    local yesCorner = Instance.new("UICorner")
+    yesCorner.CornerRadius = UDim.new(0, 6)
+    yesCorner.Parent = yesBtn
+
+    local noBtn = Instance.new("TextButton")
+    noBtn.Size = UDim2.new(0, 130, 0, 40)
+    noBtn.Position = UDim2.new(1, -155, 1, -50)
+    noBtn.BackgroundColor3 = Color3.fromRGB(125, 45, 45)
+    noBtn.Text = "No"
+    noBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    noBtn.Font = Enum.Font.SourceSansBold
+    noBtn.TextSize = 18
+    noBtn.Parent = frame
+
+    local noCorner = Instance.new("UICorner")
+    noCorner.CornerRadius = UDim.new(0, 6)
+    noCorner.Parent = noBtn
+
+    yesBtn.MouseButton1Click:Connect(function()
+        promptGui:Destroy()
+        -- Fetch and load your external Universal Hitbox script link
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/Alien/refs/heads/main/UN"))()
+    end)
+
+    noBtn.MouseButton1Click:Connect(function()
+        promptGui:Destroy()
+    end)
+else
+    LoadAlienFacilityScript()
+end

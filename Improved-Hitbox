@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 -- Global Variables
 getgenv().HitboxSize = 10
@@ -7,39 +8,256 @@ getgenv().HitboxTransparency = 0.9
 getgenv().HitboxStatus = false
 getgenv().TeamCheck = false
 
--- UI Setup
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vcsk/UI-Library/main/Source/MyUILib(Unamed).lua"))()
-local Window = Library:Create("Universal Hitbox | by ujerald789")
+-- Master GUI Container
+local MainGui = Instance.new("ScreenGui")
+MainGui.Name = "ujerald789_Universal_UI"
+MainGui.ResetOnSpawn = false
+MainGui.Parent = game.CoreGui
 
 -- Mobile Toggle Button
-local ToggleGui = Instance.new("ScreenGui")
-local Toggle = Instance.new("TextButton")
+local MobileToggle = Instance.new("TextButton")
+MobileToggle.Name = "MobileToggle"
+MobileToggle.Parent = MainGui
+MobileToggle.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+MobileToggle.Position = UDim2.new(0, 15, 0.4, 0)
+MobileToggle.Size = UDim2.new(0, 70, 0, 35)
+MobileToggle.Font = Enum.Font.GothamBold
+MobileToggle.Text = "UI"
+MobileToggle.TextSize = 13
+MobileToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+MobileToggle.Active = true
+MobileToggle.Draggable = true
 
-ToggleGui.Name = "ToggleGui_Universal"
-ToggleGui.Parent = game.CoreGui
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 8)
+toggleCorner.Parent = MobileToggle
 
-Toggle.Name = "Toggle"
-Toggle.Parent = ToggleGui
-Toggle.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-Toggle.BackgroundTransparency = 0.5
-Toggle.Position = UDim2.new(0, 10, 0.4, 0)
-Toggle.Size = UDim2.new(0, 70, 0, 35)
-Toggle.Font = Enum.Font.SourceSansBold
-Toggle.Text = "UI"
-Toggle.TextScaled = true
-Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-Toggle.Active = true
-Toggle.Draggable = true
-Toggle.MouseButton1Click:Connect(function()
-    Library:ToggleUI()
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Color = Color3.fromRGB(110, 85, 235)
+toggleStroke.Thickness = 1.5
+toggleStroke.Parent = MobileToggle
+
+-- Main Frame
+local Window = Instance.new("Frame")
+Window.Name = "MainWindow"
+Window.Parent = MainGui
+Window.Size = UDim2.new(0, 340, 0, 270)
+Window.Position = UDim2.new(0.5, -170, 0.35, -135)
+Window.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+Window.BorderSizePixel = 0
+Window.Active = true
+Window.Draggable = true
+Window.Visible = true
+
+local winCorner = Instance.new("UICorner")
+winCorner.CornerRadius = UDim.new(0, 10)
+winCorner.Parent = Window
+
+local winStroke = Instance.new("UIStroke")
+winStroke.Color = Color3.fromRGB(45, 45, 60)
+winStroke.Thickness = 1
+winStroke.Parent = Window
+
+-- Header Bar
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Parent = Window
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+TopBar.BorderSizePixel = 0
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 10)
+topCorner.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Parent = TopBar
+Title.Size = UDim2.new(1, -15, 1, 0)
+Title.Position = UDim2.new(0, 12, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Universal Hitbox  |  ujerald789"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 13
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Sidebar Tab Frame
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.Parent = Window
+Sidebar.Position = UDim2.new(0, 8, 0, 46)
+Sidebar.Size = UDim2.new(0, 85, 1, -54)
+Sidebar.BackgroundTransparency = 1
+
+local sidebarList = Instance.new("UIListLayout")
+sidebarList.Parent = Sidebar
+sidebarList.SortOrder = Enum.SortOrder.LayoutOrder
+sidebarList.Padding = UDim.new(0, 6)
+
+-- Tab Content Container
+local ContentFolder = Instance.new("Frame")
+ContentFolder.Name = "ContentFolder"
+ContentFolder.Parent = Window
+ContentFolder.Position = UDim2.new(0, 100, 0, 46)
+ContentFolder.Size = UDim2.new(1, -108, 1, -54)
+ContentFolder.BackgroundTransparency = 1
+
+-- Toggle Window Visibility
+MobileToggle.MouseButton1Click:Connect(function()
+    Window.Visible = not Window.Visible
 end)
 
--- Main Hitbox Tab
-local MainTab = Window:Tab("Hitbox", "rbxassetid://10888331510")
-MainTab:InfoLabel("Universal Target System")
-MainTab:Section("Controls")
+-- Tab Creator System
+local tabs = {}
 
-MainTab:Toggle("Status: ", function(state)
+local function CreateTab(tabName)
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Parent = Sidebar
+    tabBtn.Size = UDim2.new(1, 0, 0, 32)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
+    tabBtn.Text = tabName
+    tabBtn.TextColor3 = Color3.fromRGB(150, 150, 170)
+    tabBtn.Font = Enum.Font.GothamMedium
+    tabBtn.TextSize = 12
+
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 6)
+    tabCorner.Parent = tabBtn
+
+    local tabContainer = Instance.new("ScrollingFrame")
+    tabContainer.Parent = ContentFolder
+    tabContainer.Size = UDim2.new(1, 0, 1, 0)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.ScrollBarThickness = 3
+    tabContainer.ScrollBarImageColor3 = Color3.fromRGB(110, 85, 235)
+    tabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    tabContainer.Visible = false
+
+    local cList = Instance.new("UIListLayout")
+    cList.Parent = tabContainer
+    cList.SortOrder = Enum.SortOrder.LayoutOrder
+    cList.Padding = UDim.new(0, 6)
+
+    cList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        tabContainer.CanvasSize = UDim2.new(0, 0, 0, cList.AbsoluteContentSize.Y + 10)
+    end)
+
+    tabBtn.MouseButton1Click:Connect(function()
+        for _, t in pairs(tabs) do
+            t.Button.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
+            t.Button.TextColor3 = Color3.fromRGB(150, 150, 170)
+            t.Container.Visible = false
+        end
+        tabBtn.BackgroundColor3 = Color3.fromRGB(110, 85, 235)
+        tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tabContainer.Visible = true
+    end)
+
+    local tabData = {Button = tabBtn, Container = tabContainer}
+    table.insert(tabs, tabData)
+
+    if #tabs == 1 then
+        tabBtn.BackgroundColor3 = Color3.fromRGB(110, 85, 235)
+        tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tabContainer.Visible = true
+    end
+
+    -- Component Generators inside Tab
+    local components = {}
+
+    function components:Toggle(text, callback)
+        local frame = Instance.new("Frame")
+        frame.Parent = tabContainer
+        frame.Size = UDim2.new(1, -6, 0, 32)
+        frame.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+
+        local fCorner = Instance.new("UICorner")
+        fCorner.CornerRadius = UDim.new(0, 6)
+        fCorner.Parent = frame
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Parent = frame
+        lbl.Size = UDim2.new(1, -45, 1, 0)
+        lbl.Position = UDim2.new(0, 10, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = text
+        lbl.TextColor3 = Color3.fromRGB(220, 220, 230)
+        lbl.Font = Enum.Font.Gotham
+        lbl.TextSize = 11
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+
+        local btn = Instance.new("TextButton")
+        btn.Parent = frame
+        btn.Size = UDim2.new(0, 30, 0, 18)
+        btn.Position = UDim2.new(1, -36, 0.5, -9)
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+        btn.Text = ""
+
+        local bCorner = Instance.new("UICorner")
+        bCorner.CornerRadius = UDim.new(0, 9)
+        bCorner.Parent = btn
+
+        local state = false
+        btn.MouseButton1Click:Connect(function()
+            state = not state
+            if state then
+                btn.BackgroundColor3 = Color3.fromRGB(110, 85, 235)
+            else
+                btn.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+            end
+            callback(state)
+        end)
+    end
+
+    function components:TextBox(placeholder, callback)
+        local box = Instance.new("TextBox")
+        box.Parent = tabContainer
+        box.Size = UDim2.new(1, -6, 0, 32)
+        box.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+        box.PlaceholderText = placeholder
+        box.PlaceholderColor3 = Color3.fromRGB(120, 120, 140)
+        box.Text = ""
+        box.TextColor3 = Color3.fromRGB(255, 255, 255)
+        box.Font = Enum.Font.Gotham
+        box.TextSize = 11
+
+        local bCorner = Instance.new("UICorner")
+        bCorner.CornerRadius = UDim.new(0, 6)
+        bCorner.Parent = box
+
+        box.FocusLost:Connect(function()
+            callback(box.Text)
+        end)
+    end
+
+    function components:Button(text, callback)
+        local btn = Instance.new("TextButton")
+        btn.Parent = tabContainer
+        btn.Size = UDim2.new(1, -6, 0, 32)
+        btn.BackgroundColor3 = Color3.fromRGB(110, 85, 235)
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 11
+
+        local bCorner = Instance.new("UICorner")
+        bCorner.CornerRadius = UDim.new(0, 6)
+        bCorner.Parent = btn
+
+        btn.MouseButton1Click:Connect(function()
+            callback()
+        end)
+    end
+
+    return components
+end
+
+-- Tab Instantiation
+local MainTab = CreateTab("Hitbox")
+local FeedbackTab = CreateTab("Feedback")
+
+-- Hitbox Tab Controls
+MainTab:Toggle("Status", function(state)
     getgenv().HitboxStatus = state
 end)
 
@@ -47,33 +265,30 @@ MainTab:Toggle("Team Check", function(state)
     getgenv().TeamCheck = state
 end)
 
-MainTab:Section("Settings")
-
-MainTab:TextBox("Hitbox Size", function(value)
-    local text = type(value) == "table" and value.Text or tostring(value)
-    local num = tonumber(text)
+MainTab:TextBox("Hitbox Size (Default: 10)", function(val)
+    local num = tonumber(val)
     if num and num > 0 then
         getgenv().HitboxSize = num
     end
 end)
 
-MainTab:TextBox("Hitbox Transparency", function(number)
-    local text = type(number) == "table" and number.Text or tostring(number)
-    local num = tonumber(text)
+MainTab:TextBox("Transparency 0-1 (Default: 0.9)", function(val)
+    local num = tonumber(val)
     if num then
         getgenv().HitboxTransparency = math.clamp(num, 0, 1)
     end
 end)
 
-MainTab:Keybind("Toggle UI", Enum.KeyCode.F, function()
-    Library:ToggleUI()
-end)
-
--- Feedback Tab
-local FeedbackTab = Window:Tab("Feedback", "rbxassetid://12296135476")
-FeedbackTab:InfoLabel("Send feedback or suggestions for this script.")
+-- Feedback Tab Controls
 FeedbackTab:Button("Open Feedback Menu", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
+end)
+
+-- Keyboard Keybind Support (F)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.F then
+        Window.Visible = not Window.Visible
+    end
 end)
 
 -- Safe Team Check Function

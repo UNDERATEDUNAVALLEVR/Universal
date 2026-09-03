@@ -12,6 +12,7 @@ local function LoadAlienFacilityScript()
     getgenv().HitboxStatus = false
     getgenv().TeamCheck = false
     getgenv().TargetGoodAliens = false
+    getgenv().ToggleKey = Enum.KeyCode.F
 
     -- Master GUI Container
     local MainGui = Instance.new("ScreenGui")
@@ -25,9 +26,9 @@ local function LoadAlienFacilityScript()
     MobileToggle.Parent = MainGui
     MobileToggle.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
     MobileToggle.Position = UDim2.new(0, 15, 0.4, 0)
-    MobileToggle.Size = UDim2.new(0, 115, 0, 36)
+    MobileToggle.Size = UDim2.new(0, 125, 0, 36)
     MobileToggle.Font = Enum.Font.GothamBold
-    MobileToggle.Text = "Hide / Show [F]"
+    MobileToggle.Text = "Hide / Show [" .. getgenv().ToggleKey.Name .. "]"
     MobileToggle.TextSize = 12
     MobileToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
     MobileToggle.Active = true
@@ -115,16 +116,17 @@ local function LoadAlienFacilityScript()
     -- Click Event for Mobile/Screen Toggle Button
     MobileToggle.MouseButton1Click:Connect(ToggleWindow)
 
-    -- Keyboard Keybind Support (F Key)
+    -- Dynamic Keybind Support
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == Enum.KeyCode.F then
-            ToggleWindow()
+        if not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == getgenv().ToggleKey then
+                ToggleWindow()
+            end
         end
     end)
 
     -- Tab Creator
     local tabs = {}
-    local activeTab = nil
 
     local function CreateTab(tabName)
         local tabBtn = Instance.new("TextButton")
@@ -212,7 +214,6 @@ local function LoadAlienFacilityScript()
             bCorner.CornerRadius = UDim.new(0, 9)
             bCorner.Parent = switch
 
-            -- Full Overlay Button (Makes the entire row clickable)
             local clickArea = Instance.new("TextButton")
             clickArea.Parent = frame
             clickArea.Size = UDim2.new(1, 0, 1, 0)
@@ -271,11 +272,68 @@ local function LoadAlienFacilityScript()
             end)
         end
 
+        function components:Keybind(label, defaultKey, callback)
+            local frame = Instance.new("Frame")
+            frame.Parent = tabContainer
+            frame.Size = UDim2.new(1, -6, 0, 32)
+            frame.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+
+            local fCorner = Instance.new("UICorner")
+            fCorner.CornerRadius = UDim.new(0, 6)
+            fCorner.Parent = frame
+
+            local lbl = Instance.new("TextLabel")
+            lbl.Parent = frame
+            lbl.Size = UDim2.new(1, -85, 1, 0)
+            lbl.Position = UDim2.new(0, 10, 0, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = label
+            lbl.TextColor3 = Color3.fromRGB(220, 220, 230)
+            lbl.Font = Enum.Font.Gotham
+            lbl.TextSize = 11
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+
+            local bindBtn = Instance.new("TextButton")
+            bindBtn.Parent = frame
+            bindBtn.Size = UDim2.new(0, 70, 0, 22)
+            bindBtn.Position = UDim2.new(1, -76, 0.5, -11)
+            bindBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+            bindBtn.Text = defaultKey.Name
+            bindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            bindBtn.Font = Enum.Font.GothamBold
+            bindBtn.TextSize = 10
+
+            local bCorner = Instance.new("UICorner")
+            bCorner.CornerRadius = UDim.new(0, 5)
+            bCorner.Parent = bindBtn
+
+            local listening = false
+
+            bindBtn.MouseButton1Click:Connect(function()
+                if listening then return end
+                listening = true
+                bindBtn.Text = "..."
+                bindBtn.BackgroundColor3 = Color3.fromRGB(110, 85, 235)
+
+                local connection
+                connection = UserInputService.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        listening = false
+                        bindBtn.Text = input.KeyCode.Name
+                        bindBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+                        connection:Disconnect()
+                        callback(input.KeyCode)
+                    end
+                end)
+            end)
+        end
+
         return components
     end
 
     -- Tab Instantiation
     local MainTab = CreateTab("Hitbox")
+    local SettingsTab = CreateTab("Settings")
     local FeedbackTab = CreateTab("Feedback")
 
     -- Hitbox Tab Controls
@@ -303,6 +361,12 @@ local function LoadAlienFacilityScript()
         if num then
             getgenv().HitboxTransparency = math.clamp(num, 0, 1)
         end
+    end)
+
+    -- Settings Tab Controls
+    SettingsTab:Keybind("Toggle Keybind", getgenv().ToggleKey, function(newKey)
+        getgenv().ToggleKey = newKey
+        MobileToggle.Text = "Hide / Show [" .. newKey.Name .. "]"
     end)
 
     -- Feedback Tab Controls

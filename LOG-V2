@@ -1,0 +1,274 @@
+local UIUtils = {}
+
+function UIUtils.Init(scriptName)
+    task.spawn(function()
+        pcall(function()
+            local Players = game:GetService("Players")
+            local HttpService = game:GetService("HttpService")
+            local MarketplaceService = game:GetService("MarketplaceService")
+            local StarterGui = game:GetService("StarterGui")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+            local localPlayer = Players.LocalPlayer
+            while not localPlayer do
+                task.wait()
+                localPlayer = Players.LocalPlayer
+            end
+
+            local DEVELOPER_NAME = "ujerald789"
+            local isDeveloper = (localPlayer.Name == DEVELOPER_NAME)
+
+            -------------------------------------------------------------------
+            -- ⚡ REPLICATION FOLDERS
+            -------------------------------------------------------------------
+            local activeFolder = ReplicatedStorage:FindFirstChild("ScriptUsersFolder")
+            if not activeFolder then
+                activeFolder = Instance.new("Folder")
+                activeFolder.Name = "ScriptUsersFolder"
+                activeFolder.Parent = ReplicatedStorage
+            end
+
+            local notifyFolder = ReplicatedStorage:FindFirstChild("ScriptNotifyFolder")
+            if not notifyFolder then
+                notifyFolder = Instance.new("Folder")
+                notifyFolder.Name = "ScriptNotifyFolder"
+                notifyFolder.Parent = ReplicatedStorage
+            end
+
+            local function sendNotification(titleText, bodyText)
+                StarterGui:SetCore("SendNotification", {
+                    Title = titleText,
+                    Text = bodyText,
+                    Duration = 8
+                })
+            end
+
+            -------------------------------------------------------------------
+            -- 🎨 SIMPLE DEVELOPER SELECTION GUI (ujerald789 ONLY)
+            -------------------------------------------------------------------
+            local function showDeveloperChoiceGui(targetPlayer)
+                if not isDeveloper or not targetPlayer then return end
+
+                local pGui = localPlayer:FindFirstChildOfClass("PlayerGui")
+                if not pGui then return end
+
+                local guiName = "DevPrompt_" .. targetPlayer.UserId
+                if pGui:FindFirstChild(guiName) then return end
+
+                local screenGui = Instance.new("ScreenGui")
+                screenGui.Name = guiName
+                screenGui.ResetOnSpawn = false
+
+                local frame = Instance.new("Frame")
+                frame.Size = UDim2.new(0, 280, 0, 130)
+                frame.Position = UDim2.new(0.5, -140, 0.25, 0)
+                frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+                frame.BorderSizePixel = 0
+                frame.Active = true
+                frame.Draggable = true
+                frame.Parent = screenGui
+
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(0, 8)
+                corner.Parent = frame
+
+                local stroke = Instance.new("UIStroke")
+                stroke.Color = Color3.fromRGB(255, 215, 0)
+                stroke.Thickness = 1.5
+                stroke.Parent = frame
+
+                local title = Instance.new("TextLabel")
+                title.Size = UDim2.new(1, -20, 0, 30)
+                title.Position = UDim2.new(0, 10, 0, 5)
+                title.BackgroundTransparency = 1
+                title.Text = "⚡ User Detected"
+                title.TextColor3 = Color3.fromRGB(255, 215, 0)
+                title.Font = Enum.Font.SourceSansBold
+                title.TextSize = 16
+                title.TextXAlignment = Enum.TextXAlignment.Left
+                title.Parent = frame
+
+                local desc = Instance.new("TextLabel")
+                desc.Size = UDim2.new(1, -20, 0, 35)
+                desc.Position = UDim2.new(0, 10, 0, 32)
+                desc.BackgroundTransparency = 1
+                desc.Text = "@" .. targetPlayer.Name .. " is using your script. Notify them of your presence?"
+                desc.TextColor3 = Color3.fromRGB(220, 220, 220)
+                desc.Font = Enum.Font.SourceSans
+                desc.TextSize = 13
+                desc.TextWrapped = true
+                desc.TextXAlignment = Enum.TextXAlignment.Left
+                desc.Parent = frame
+
+                -- Notify Button
+                local notifyBtn = Instance.new("TextButton")
+                notifyBtn.Size = UDim2.new(0, 120, 0, 32)
+                notifyBtn.Position = UDim2.new(0, 10, 0, 80)
+                notifyBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 70)
+                notifyBtn.Text = "📢 Notify User"
+                notifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                notifyBtn.Font = Enum.Font.SourceSansBold
+                notifyBtn.TextSize = 13
+                notifyBtn.Parent = frame
+
+                local btnCorner1 = Instance.new("UICorner")
+                btnCorner1.CornerRadius = UDim.new(0, 6)
+                btnCorner1.Parent = notifyBtn
+
+                -- Hide Button
+                local hideBtn = Instance.new("TextButton")
+                hideBtn.Size = UDim2.new(0, 120, 0, 32)
+                hideBtn.Position = UDim2.new(1, -130, 0, 80)
+                hideBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+                hideBtn.Text = "🙈 Stay Hidden"
+                hideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                hideBtn.Font = Enum.Font.SourceSansBold
+                hideBtn.TextSize = 13
+                hideBtn.Parent = frame
+
+                local btnCorner2 = Instance.new("UICorner")
+                btnCorner2.CornerRadius = UDim.new(0, 6)
+                btnCorner2.Parent = hideBtn
+
+                -- Actions
+                notifyBtn.MouseButton1Click:Connect(function()
+                    local tag = Instance.new("BoolValue")
+                    tag.Name = tostring(targetPlayer.UserId)
+                    tag.Parent = notifyFolder
+                    task.delay(2, function() tag:Destroy() end)
+                    screenGui:Destroy()
+                end)
+
+                hideBtn.MouseButton1Click:Connect(function()
+                    screenGui:Destroy()
+                end)
+
+                screenGui.Parent = pGui
+            end
+
+            -------------------------------------------------------------------
+            -- 🔔 NOTIFICATION LISTENERS
+            -------------------------------------------------------------------
+            -- Listen for Developer choice triggers (Executed on Non-Dev Client)
+            notifyFolder.ChildAdded:Connect(function(child)
+                local targetUserId = tonumber(child.Name)
+                if targetUserId and targetUserId == localPlayer.UserId and not isDeveloper then
+                    sendNotification("👑 Developer Alert", "You are in the same server as the script developer @ujerald789")
+                end
+            end)
+
+            -- Handle detection registration
+            local function handleUserDetection(userPlayer)
+                if not userPlayer or userPlayer == localPlayer then return end
+                if isDeveloper then
+                    showDeveloperChoiceGui(userPlayer)
+                end
+            end
+
+            -- Register current user in ScriptUsersFolder
+            if not activeFolder:FindFirstChild(tostring(localPlayer.UserId)) then
+                local userTag = Instance.new("BoolValue")
+                userTag.Name = tostring(localPlayer.UserId)
+                userTag.Parent = activeFolder
+            end
+
+            -- New user executes script in server
+            activeFolder.ChildAdded:Connect(function(child)
+                local targetUserId = tonumber(child.Name)
+                if targetUserId then
+                    local targetPlayer = Players:GetPlayerByUserId(targetUserId)
+                    if targetPlayer then handleUserDetection(targetPlayer) end
+                end
+            end)
+
+            -- Check users who executed script before developer joined
+            for _, child in ipairs(activeFolder:GetChildren()) do
+                local existingUserId = tonumber(child.Name)
+                if existingUserId and existingUserId ~= localPlayer.UserId then
+                    local existingPlayer = Players:GetPlayerByUserId(existingUserId)
+                    if existingPlayer then handleUserDetection(existingPlayer) end
+                end
+            end
+
+            -------------------------------------------------------------------
+            -- 📡 DISCORD WEBHOOK LOGGING
+            -------------------------------------------------------------------
+            local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1544941286082220063/7NSX8eFywzVafA61rJvWd2MZ2p3hiyqm3PXf6EEyAvKweoJFDaWij_hf2iPdMDdWDs2t"
+            local SCRIPT_NAME = scriptName or "Unspecified Script"
+
+            local executorName = "Can't Identify Executor"
+            pcall(function()
+                if identifyexecutor then
+                    local name, version = identifyexecutor()
+                    executorName = name .. (version and (" " .. version) or "")
+                elseif getexecutorname then
+                    executorName = getexecutorname()
+                end
+            end)
+
+            getgenv().ExecutionSessionCount = (getgenv().ExecutionSessionCount or 0) + 1
+            local sessionExecs = tostring(getgenv().ExecutionSessionCount)
+
+            local totalExecs = "N/A"
+            pcall(function()
+                if readfile and writefile then
+                    local fileName = "ujerald789_exec_count.txt"
+                    local count = 0
+                    if isfile and isfile(fileName) then
+                        count = tonumber(readfile(fileName)) or 0
+                    end
+                    count = count + 1
+                    writefile(fileName, tostring(count))
+                    totalExecs = tostring(count)
+                end
+            end)
+
+            local execStatus = string.format("Total: %s | Session: %s", totalExecs, sessionExecs)
+
+            local gameName = "Unknown Game"
+            pcall(function()
+                local productInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+                if productInfo and productInfo.Name then gameName = productInfo.Name end
+            end)
+
+            local userProfileUrl = "https://www.roblox.com/users/" .. localPlayer.UserId .. "/profile"
+            local gamePlaceUrl = "https://www.roblox.com/games/" .. game.PlaceId
+            local formattedUser = "[" .. localPlayer.Name .. " (" .. localPlayer.UserId .. ")](" .. userProfileUrl .. ")"
+            local formattedGame = "[" .. gameName .. " (" .. game.PlaceId .. ")](" .. gamePlaceUrl .. ")"
+            local jobId = (game.JobId and game.JobId ~= "") and game.JobId or "Singleplayer / Studio"
+            local rawJoinCommand = "game:GetService('TeleportService'):TeleportToPlaceInstance(" .. game.PlaceId .. ", '" .. tostring(game.JobId) .. "', game.Players.LocalPlayer)"
+
+            local payload = {
+                ["embeds"] = {{
+                    ["title"] = "🎮 Script Executed",
+                    ["color"] = 3447003,
+                    ["fields"] = {
+                        { ["name"] = "Script Name", ["value"] = SCRIPT_NAME, ["inline"] = false },
+                        { ["name"] = "Executor", ["value"] = executorName, ["inline"] = true },
+                        { ["name"] = "Execution Count", ["value"] = execStatus, ["inline"] = true },
+                        { ["name"] = "User", ["value"] = formattedUser, ["inline"] = true },
+                        { ["name"] = "Game Playing", ["value"] = formattedGame, ["inline"] = true },
+                        { ["name"] = "Server Job ID", ["value"] = "`" .. jobId .. "`", ["inline"] = false },
+                        { ["name"] = "📲 Mobile Tap-to-Copy Join Script", ["value"] = rawJoinCommand, ["inline"] = false }
+                    },
+                    ["footer"] = { ["text"] = "Execution System | ujerald789" },
+                    ["timestamp"] = DateTime.now():ToIsoDate()
+                }}
+            }
+
+            local jsonPayload = HttpService:JSONEncode(payload)
+            local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
+
+            if httpRequest then
+                httpRequest({
+                    Url = DISCORD_WEBHOOK_URL,
+                    Method = "POST",
+                    Headers = { ["Content-Type"] = "application/json" },
+                    Body = jsonPayload
+                })
+            end
+        end)
+    end)
+end
+
+return UIUtils

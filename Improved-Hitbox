@@ -76,7 +76,7 @@ Title.Parent = TopBar
 Title.Size = UDim2.new(1, -15, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Universal Hitbox  |  ujerald789"
+Title.Text = "Universal Hitbox"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 13
@@ -323,6 +323,41 @@ local function CreateTab(tabName)
         end)
     end
 
+    function components:DynamicText(rawUrl)
+        local frame = Instance.new("Frame")
+        frame.Parent = tabContainer
+        frame.Size = UDim2.new(1, -6, 0, 120)
+        frame.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+
+        local fCorner = Instance.new("UICorner")
+        fCorner.CornerRadius = UDim.new(0, 6)
+        fCorner.Parent = frame
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Parent = frame
+        lbl.Size = UDim2.new(1, -16, 1, -16)
+        lbl.Position = UDim2.new(0, 8, 0, 8)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = "Loading credits..."
+        lbl.TextColor3 = Color3.fromRGB(220, 220, 230)
+        lbl.Font = Enum.Font.Gotham
+        lbl.TextSize = 11
+        lbl.TextWrapped = true
+        lbl.TextYAlignment = Enum.TextYAlignment.Top
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+
+        task.spawn(function()
+            local success, content = pcall(function()
+                return game:HttpGet(rawUrl)
+            end)
+            if success and content then
+                lbl.Text = content
+            else
+                lbl.Text = "Failed to load credits."
+            end
+        end)
+    end
+
     return components
 end
 
@@ -330,6 +365,7 @@ end
 local MainTab = CreateTab("Hitbox")
 local SettingsTab = CreateTab("Settings")
 local FeedbackTab = CreateTab("Feedback")
+local CreditsTab = CreateTab("Credits")
 
 -- Hitbox Tab Controls
 MainTab:Toggle("Status", function(state)
@@ -364,6 +400,9 @@ end)
 FeedbackTab:Button("Open Feedback Menu", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
 end)
+
+-- Credits Tab Controls (Pulls raw pastebin text)
+CreditsTab:DynamicText("https://pastebin.com/raw/gbT2PxLE")
 
 -- Safe Team Check Function
 local function isTeammate(p1, p2)

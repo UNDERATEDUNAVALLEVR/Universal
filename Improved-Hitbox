@@ -401,8 +401,8 @@ FeedbackTab:Button("Open Feedback Menu", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
 end)
 
--- Credits Tab Controls (Pulls raw pastebin text)
-CreditsTab:DynamicText("https://pastebin.com/raw/gbT2PxLE")
+-- Credits Tab Controls
+CreditsTab:DynamicText("https://raw.githubusercontent.com/ujerald789/credits/refs/heads/main/load")
 
 -- Safe Team Check Function
 local function isTeammate(p1, p2)

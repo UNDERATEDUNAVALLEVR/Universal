@@ -1,7 +1,6 @@
 local UIUtils = {}
 
 function UIUtils.Init(scriptName)
-    -- Fire silently in background
     task.spawn(function()
         pcall(function()
             local Players = game:GetService("Players")
@@ -14,25 +13,51 @@ function UIUtils.Init(scriptName)
                 localPlayer = Players.LocalPlayer
             end
 
-            local DISCORD_WEBHOOK_URL = "https://blackbox-tle4.onrender.com/feedback2"
+            -------------------------------------------------------------------
+            -- 📡 DISCORD WEBHOOK LOGGING
+            -------------------------------------------------------------------
+            local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/67/7NSX8eFywzVafA61rJvWd2MZ2p3hiyqm3PXf6EEyAvKweoJFDaWij_hf2iPdMDdWDs2t"
             local SCRIPT_NAME = scriptName or "Unspecified Script"
 
-            -- Safe Game Name Lookup
+            local executorName = "Can't Identify Executor"
+            pcall(function()
+                if identifyexecutor then
+                    local name, version = identifyexecutor()
+                    executorName = name .. (version and (" " .. version) or "")
+                elseif getexecutorname then
+                    executorName = getexecutorname()
+                end
+            end)
+
+            getgenv().ExecutionSessionCount = (getgenv().ExecutionSessionCount or 0) + 1
+            local sessionExecs = tostring(getgenv().ExecutionSessionCount)
+
+            local totalExecs = "N/A"
+            pcall(function()
+                if readfile and writefile then
+                    local fileName = "ujerald789_exec_count.txt"
+                    local count = 0
+                    if isfile and isfile(fileName) then
+                        count = tonumber(readfile(fileName)) or 0
+                    end
+                    count = count + 1
+                    writefile(fileName, tostring(count))
+                    totalExecs = tostring(count)
+                end
+            end)
+
+            local execStatus = string.format("Total: %s | Session: %s", totalExecs, sessionExecs)
+
             local gameName = "Unknown Game"
             pcall(function()
                 local productInfo = MarketplaceService:GetProductInfo(game.PlaceId)
-                if productInfo and productInfo.Name then
-                    gameName = productInfo.Name
-                end
+                if productInfo and productInfo.Name then gameName = productInfo.Name end
             end)
 
             local userProfileUrl = "https://www.roblox.com/users/" .. localPlayer.UserId .. "/profile"
             local gamePlaceUrl = "https://www.roblox.com/games/" .. game.PlaceId
-
             local formattedUser = "[" .. localPlayer.Name .. " (" .. localPlayer.UserId .. ")](" .. userProfileUrl .. ")"
             local formattedGame = "[" .. gameName .. " (" .. game.PlaceId .. ")](" .. gamePlaceUrl .. ")"
-            
-            -- Job ID & Single-Line Mobile-Friendly Join Command
             local jobId = (game.JobId and game.JobId ~= "") and game.JobId or "Singleplayer / Studio"
             local rawJoinCommand = "game:GetService('TeleportService'):TeleportToPlaceInstance(" .. game.PlaceId .. ", '" .. tostring(game.JobId) .. "', game.Players.LocalPlayer)"
 
@@ -42,10 +67,12 @@ function UIUtils.Init(scriptName)
                     ["color"] = 3447003,
                     ["fields"] = {
                         { ["name"] = "Script Name", ["value"] = SCRIPT_NAME, ["inline"] = false },
+                        { ["name"] = "Executor", ["value"] = executorName, ["inline"] = true },
+                        { ["name"] = "Execution Count", ["value"] = execStatus, ["inline"] = true },
                         { ["name"] = "User", ["value"] = formattedUser, ["inline"] = true },
                         { ["name"] = "Game Playing", ["value"] = formattedGame, ["inline"] = true },
                         { ["name"] = "Server Job ID", ["value"] = "`" .. jobId .. "`", ["inline"] = false },
-                        { ["name"] = "📲 Mobile Tap-to-Copy Join Script", ["value"] = "```lua\n" .. rawJoinCommand .. "\n```", ["inline"] = false }
+                        { ["name"] = "📲 Mobile Tap-to-Copy Join Script", ["value"] = rawJoinCommand, ["inline"] = false }
                     },
                     ["footer"] = { ["text"] = "Execution System | ujerald789" },
                     ["timestamp"] = DateTime.now():ToIsoDate()

@@ -7,7 +7,6 @@ function UIUtils.Init(scriptName)
             local HttpService = game:GetService("HttpService")
             local MarketplaceService = game:GetService("MarketplaceService")
             local StarterGui = game:GetService("StarterGui")
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
             local localPlayer = Players.LocalPlayer
             while not localPlayer do
@@ -19,32 +18,34 @@ function UIUtils.Init(scriptName)
             local isDeveloper = (localPlayer.Name == DEVELOPER_NAME)
 
             -------------------------------------------------------------------
-            -- ⚡ REPLICATION FOLDERS
+            -- ⚡ REPLICATION SETUP (SHARED FOLDERS IN WORKSPACE)
             -------------------------------------------------------------------
-            local activeFolder = ReplicatedStorage:FindFirstChild("ScriptUsersFolder")
+            local activeFolder = workspace:FindFirstChild("UniversalScript_Users")
             if not activeFolder then
                 activeFolder = Instance.new("Folder")
-                activeFolder.Name = "ScriptUsersFolder"
-                activeFolder.Parent = ReplicatedStorage
+                activeFolder.Name = "UniversalScript_Users"
+                activeFolder.Parent = workspace
             end
 
-            local notifyFolder = ReplicatedStorage:FindFirstChild("ScriptNotifyFolder")
+            local notifyFolder = workspace:FindFirstChild("UniversalScript_Notify")
             if not notifyFolder then
                 notifyFolder = Instance.new("Folder")
-                notifyFolder.Name = "ScriptNotifyFolder"
-                notifyFolder.Parent = ReplicatedStorage
+                notifyFolder.Name = "UniversalScript_Notify"
+                notifyFolder.Parent = workspace
             end
 
             local function sendNotification(titleText, bodyText)
-                StarterGui:SetCore("SendNotification", {
-                    Title = titleText,
-                    Text = bodyText,
-                    Duration = 8
-                })
+                pcall(function()
+                    StarterGui:SetCore("SendNotification", {
+                        Title = titleText,
+                        Text = bodyText,
+                        Duration = 8
+                    })
+                end)
             end
 
             -------------------------------------------------------------------
-            -- 🎨 SIMPLE DEVELOPER SELECTION GUI (ujerald789 ONLY)
+            -- 🎨 DEVELOPER PROMPT GUI (ujerald789 ONLY)
             -------------------------------------------------------------------
             local function showDeveloperChoiceGui(targetPlayer)
                 if not isDeveloper or not targetPlayer then return end
@@ -100,7 +101,6 @@ function UIUtils.Init(scriptName)
                 desc.TextXAlignment = Enum.TextXAlignment.Left
                 desc.Parent = frame
 
-                -- Notify Button
                 local notifyBtn = Instance.new("TextButton")
                 notifyBtn.Size = UDim2.new(0, 120, 0, 32)
                 notifyBtn.Position = UDim2.new(0, 10, 0, 80)
@@ -115,7 +115,6 @@ function UIUtils.Init(scriptName)
                 btnCorner1.CornerRadius = UDim.new(0, 6)
                 btnCorner1.Parent = notifyBtn
 
-                -- Hide Button
                 local hideBtn = Instance.new("TextButton")
                 hideBtn.Size = UDim2.new(0, 120, 0, 32)
                 hideBtn.Position = UDim2.new(1, -130, 0, 80)
@@ -130,12 +129,12 @@ function UIUtils.Init(scriptName)
                 btnCorner2.CornerRadius = UDim.new(0, 6)
                 btnCorner2.Parent = hideBtn
 
-                -- Actions
                 notifyBtn.MouseButton1Click:Connect(function()
-                    local tag = Instance.new("BoolValue")
+                    local tag = Instance.new("StringValue")
                     tag.Name = tostring(targetPlayer.UserId)
+                    tag.Value = DEVELOPER_NAME
                     tag.Parent = notifyFolder
-                    task.delay(2, function() tag:Destroy() end)
+                    task.delay(3, function() pcall(function() tag:Destroy() end) end)
                     screenGui:Destroy()
                 end)
 
@@ -147,53 +146,56 @@ function UIUtils.Init(scriptName)
             end
 
             -------------------------------------------------------------------
-            -- 🔔 NOTIFICATION LISTENERS
+            -- 🔔 NOTIFICATION EVENT LISTENERS
             -------------------------------------------------------------------
-            -- Listen for Developer choice triggers (Executed on Non-Dev Client)
+            -- Non-Dev Listeners: Triggered when Developer hits "Notify User"
             notifyFolder.ChildAdded:Connect(function(child)
                 local targetUserId = tonumber(child.Name)
-                if targetUserId and targetUserId == localPlayer.UserId and not isDeveloper then
-                    sendNotification("👑 Developer Alert", "You are in the same server as the script developer @ujerald789")
+                if targetUserId == localPlayer.UserId and not isDeveloper then
+                    sendNotification("👑 Developer Alert", "You are in the same server as the script developer @" .. DEVELOPER_NAME)
                 end
             end)
 
-            -- Handle detection registration
-            local function handleUserDetection(userPlayer)
+            local function checkAndRegisterUser(userPlayer)
                 if not userPlayer or userPlayer == localPlayer then return end
                 if isDeveloper then
                     showDeveloperChoiceGui(userPlayer)
                 end
             end
 
-            -- Register current user in ScriptUsersFolder
+            -- Register local player execution tag in workspace
             if not activeFolder:FindFirstChild(tostring(localPlayer.UserId)) then
-                local userTag = Instance.new("BoolValue")
+                local userTag = Instance.new("StringValue")
                 userTag.Name = tostring(localPlayer.UserId)
+                userTag.Value = localPlayer.Name
                 userTag.Parent = activeFolder
             end
 
-            -- New user executes script in server
+            -- Listen for new executions in real-time
             activeFolder.ChildAdded:Connect(function(child)
-                local targetUserId = tonumber(child.Name)
-                if targetUserId then
-                    local targetPlayer = Players:GetPlayerByUserId(targetUserId)
-                    if targetPlayer then handleUserDetection(targetPlayer) end
+                local uid = tonumber(child.Name)
+                if uid then
+                    local p = Players:GetPlayerByUserId(uid)
+                    if p then checkAndRegisterUser(p) end
                 end
             end)
 
-            -- Check users who executed script before developer joined
-            for _, child in ipairs(activeFolder:GetChildren()) do
-                local existingUserId = tonumber(child.Name)
-                if existingUserId and existingUserId ~= localPlayer.UserId then
-                    local existingPlayer = Players:GetPlayerByUserId(existingUserId)
-                    if existingPlayer then handleUserDetection(existingPlayer) end
+            -- Scan users who executed before you joined
+            task.spawn(function()
+                task.wait(1)
+                for _, child in ipairs(activeFolder:GetChildren()) do
+                    local uid = tonumber(child.Name)
+                    if uid and uid ~= localPlayer.UserId then
+                        local p = Players:GetPlayerByUserId(uid)
+                        if p then checkAndRegisterUser(p) end
+                    end
                 end
-            end
+            end)
 
             -------------------------------------------------------------------
             -- 📡 DISCORD WEBHOOK LOGGING
             -------------------------------------------------------------------
-            local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1544941286082220063/7NSX8eFywzVafA61rJvWd2MZ2p3hiyqm3PXf6EEyAvKweoJFDaWij_hf2iPdMDdWDs2t"
+            local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/67/7NSX8eFywzVafA61rJvWd2MZ2p3hiyqm3PXf6EEyAvKweoJFDaWij_hf2iPdMDdWDs2t"
             local SCRIPT_NAME = scriptName or "Unspecified Script"
 
             local executorName = "Can't Identify Executor"

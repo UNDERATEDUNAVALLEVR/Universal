@@ -8,6 +8,52 @@ getgenv().HitboxTransparency = 0.9
 getgenv().HitboxStatus = false
 getgenv().TeamCheck = false
 getgenv().ToggleKey = Enum.KeyCode.F
+getgenv().Whitelist = {} -- Table to store Whitelisted Usernames
+
+-- Helper function to match partial usernames with active server players
+local function ResolvePlayerName(partialName)
+    if not partialName or partialName == "" then return nil end
+    local lowerPartial = string.lower(partialName)
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        local name = string.lower(player.Name)
+        local display = string.lower(player.DisplayName)
+        
+        -- Exact match prioritized, followed by prefix/partial match
+        if name == lowerPartial or display == lowerPartial then
+            return player.Name
+        end
+        if string.find(name, lowerPartial, 1, true) or string.find(display, lowerPartial, 1, true) then
+            return player.Name
+        end
+    end
+    
+    return partialName -- Fallback to raw string if player isn't in server
+end
+
+-- Helper functions for Whitelist management
+local function AddToWhitelist(username)
+    local resolvedName = ResolvePlayerName(username)
+    if resolvedName and resolvedName ~= "" then
+        local lowerName = string.lower(resolvedName)
+        if not getgenv().Whitelist[lowerName] then
+            getgenv().Whitelist[lowerName] = resolvedName -- Save display format
+        end
+    end
+end
+
+local function RemoveFromWhitelist(username)
+    local resolvedName = ResolvePlayerName(username)
+    if resolvedName and resolvedName ~= "" then
+        local lowerName = string.lower(resolvedName)
+        getgenv().Whitelist[lowerName] = nil
+    end
+end
+
+local function IsWhitelisted(player)
+    if not player then return false end
+    return getgenv().Whitelist[string.lower(player.Name)] ~= nil or getgenv().Whitelist[string.lower(player.DisplayName)] ~= nil
+end
 
 -- Master GUI Container
 local MainGui = Instance.new("ScreenGui")
@@ -108,10 +154,8 @@ local function ToggleWindow()
     Window.Visible = not Window.Visible
 end
 
--- Click Event for Mobile/Screen Toggle Button
 MobileToggle.MouseButton1Click:Connect(ToggleWindow)
 
--- Dynamic Keybind Support
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
         if input.KeyCode == getgenv().ToggleKey then
@@ -175,7 +219,6 @@ local function CreateTab(tabName)
         tabContainer.Visible = true
     end
 
-    -- Component Generators inside Tab
     local components = {}
 
     function components:Toggle(text, callback)
@@ -218,11 +261,7 @@ local function CreateTab(tabName)
         local state = false
         clickArea.MouseButton1Click:Connect(function()
             state = not state
-            if state then
-                switch.BackgroundColor3 = Color3.fromRGB(110, 85, 235)
-            else
-                switch.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
-            end
+            switch.BackgroundColor3 = state and Color3.fromRGB(110, 85, 235) or Color3.fromRGB(40, 40, 52)
             callback(state)
         end)
     end
@@ -338,7 +377,7 @@ local function CreateTab(tabName)
         lbl.Size = UDim2.new(1, -16, 1, -16)
         lbl.Position = UDim2.new(0, 8, 0, 8)
         lbl.BackgroundTransparency = 1
-        lbl.Text = "Loading credits..."
+        lbl.Text = "Loading details..."
         lbl.TextColor3 = Color3.fromRGB(220, 220, 230)
         lbl.Font = Enum.Font.Gotham
         lbl.TextSize = 11
@@ -353,18 +392,45 @@ local function CreateTab(tabName)
             if success and content then
                 lbl.Text = content
             else
-                lbl.Text = "Failed to load credits."
+                lbl.Text = "Failed to load content."
             end
         end)
+    end
+
+    function components:Label(defaultText)
+        local frame = Instance.new("Frame")
+        frame.Parent = tabContainer
+        frame.Size = UDim2.new(1, -6, 0, 60)
+        frame.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+
+        local fCorner = Instance.new("UICorner")
+        fCorner.CornerRadius = UDim.new(0, 6)
+        fCorner.Parent = frame
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Parent = frame
+        lbl.Size = UDim2.new(1, -16, 1, -12)
+        lbl.Position = UDim2.new(0, 8, 0, 6)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = defaultText
+        lbl.TextColor3 = Color3.fromRGB(220, 220, 230)
+        lbl.Font = Enum.Font.Gotham
+        lbl.TextSize = 11
+        lbl.TextWrapped = true
+        lbl.TextYAlignment = Enum.TextYAlignment.Top
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+
+        return lbl
     end
 
     return components
 end
 
--- Tab Instantiation
+-- Tab Instantiation Order
 local MainTab = CreateTab("Hitbox")
 local SettingsTab = CreateTab("Settings")
 local FeedbackTab = CreateTab("Feedback")
+local ChangelogTab = CreateTab("Changelogs")
 local CreditsTab = CreateTab("Credits")
 
 -- Hitbox Tab Controls
@@ -390,6 +456,54 @@ MainTab:TextBox("Transparency 0-1 (Default: 0.9)", function(val)
     end
 end)
 
+-- Whitelist Management inside Main Tab
+local addInput = ""
+local removeInput = ""
+
+MainTab:TextBox("Add User (e.g. 'toast')...", function(val)
+    addInput = val
+end)
+
+local displayLabel
+
+MainTab:Button("Add to Whitelist", function()
+    AddToWhitelist(addInput)
+end)
+
+MainTab:TextBox("Remove User...", function(val)
+    removeInput = val
+end)
+
+MainTab:Button("Remove from Whitelist", function()
+    RemoveFromWhitelist(removeInput)
+end)
+
+MainTab:Button("Clear Whitelist", function()
+    table.clear(getgenv().Whitelist)
+end)
+
+-- Bottom Dynamic Display Label
+displayLabel = MainTab:Label("Whitelisted Players:\nNone")
+
+-- Live Whitelist Display Refresher
+local function UpdateWhitelistDisplay()
+    local list = {}
+    for _, name in pairs(getgenv().Whitelist) do
+        table.insert(list, name)
+    end
+    if #list == 0 then
+        displayLabel.Text = "Whitelisted Players:\nNone"
+    else
+        displayLabel.Text = "Whitelisted Players:\n" .. table.concat(list, ", ")
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.5) do
+        UpdateWhitelistDisplay()
+    end
+end)
+
 -- Settings Tab Controls
 SettingsTab:Keybind("Toggle Keybind", getgenv().ToggleKey, function(newKey)
     getgenv().ToggleKey = newKey
@@ -400,6 +514,9 @@ end)
 FeedbackTab:Button("Open Feedback Menu", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/ujerald789/FB/main/FB"))()
 end)
+
+-- Changelogs Tab Controls
+ChangelogTab:DynamicText("https://raw.githubusercontent.com/ujerald789/credits/refs/heads/main/changelog")
 
 -- Credits Tab Controls
 CreditsTab:DynamicText("https://raw.githubusercontent.com/ujerald789/credits/refs/heads/main/load")
@@ -433,7 +550,7 @@ RunService.RenderStepped:Connect(function()
         if v ~= localPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
             local hrp = v.Character.HumanoidRootPart
             
-            if getgenv().HitboxStatus then
+            if getgenv().HitboxStatus and not IsWhitelisted(v) then
                 local shouldExpand = false
 
                 if not getgenv().TeamCheck then
@@ -450,7 +567,10 @@ RunService.RenderStepped:Connect(function()
                         hrp.Transparency = getgenv().HitboxTransparency
                         hrp.BrickColor = BrickColor.new("Really black")
                         hrp.Material = Enum.Material.Neon
+                        
+                        -- Allows you to get close without hitting invisible walls
                         hrp.CanCollide = false
+                        hrp.CanTouch = true
                     end)
                 else
                     pcall(function()
